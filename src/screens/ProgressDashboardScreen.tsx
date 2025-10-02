@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { ScrollView, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Typography from '../components/common/Typography';
 import StyledButton from '../components/common/StyledButton';
 import StatCard from '../components/dashboard/StatCard';
@@ -8,6 +9,8 @@ import ReviewWordList from '../components/dashboard/ReviewWordList';
 import ContinueListeningList from '../components/dashboard/ContinueListeningList';
 import { colors } from '../theme/colors';
 import useProgressStore from '../store/useProgressStore';
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 function formatMinutes(minutes: number) {
   return `${Math.round(minutes)}분`;
@@ -18,6 +21,7 @@ function formatPercent(value: number) {
 }
 
 const ProgressDashboardScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { summary, continueEpisodes, reviewWords, isLoading, error, loadDashboard, refreshReviewWords } =
     useProgressStore();
 
@@ -76,11 +80,19 @@ const ProgressDashboardScreen = () => {
           ))}
         </View>
 
-        <ReviewWordList words={reviewWords} onPressWord={() => {}} onViewAll={() => refreshReviewWords(20)} />
+        <ReviewWordList
+          words={reviewWords}
+          onPressWord={() => {}}
+          onViewAll={() => navigation.navigate('ReviewSchedule')}
+        />
 
-        <ContinueListeningList episodes={continueEpisodes} onContinue={() => {}} onViewAll={() => {}} />
+        <ContinueListeningList
+          episodes={continueEpisodes}
+          onContinue={() => {}}
+          onViewAll={() => navigation.navigate('ReviewSchedule')}
+        />
 
-        <StyledButton title="복습 시작하기" onPress={() => {}} style={styles.bottomButton} />
+        <StyledButton title="복습 시작하기" onPress={() => navigation.navigate('ReviewSchedule')} style={styles.bottomButton} />
       </ScrollView>
     </SafeAreaView>
   );

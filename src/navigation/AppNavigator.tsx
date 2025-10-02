@@ -5,12 +5,16 @@ import HomeScreen from '../screens/HomeScreen';
 import StoryDetailScreen from '../screens/StoryDetailScreen';
 import QuizScreen from '../screens/QuizScreen';
 import ProgressDashboardScreen from '../screens/ProgressDashboardScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import ReviewScheduleScreen from '../screens/ReviewScheduleScreen';
 
 export type RootStackParamList = {
   Home: undefined;
   StoryDetail: { storyId: string };
   Quiz: { episodeId: string };
   ProgressDashboard: undefined;
+  Settings: undefined;
+  ReviewSchedule: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -25,9 +29,11 @@ function AppNavigator() {
         }}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="StoryDetail" component={StoryDetailScreen} />
-      <Stack.Screen name="Quiz" component={QuizScreen} />
-      <Stack.Screen name="ProgressDashboard" component={ProgressDashboardScreen} />
+        <Stack.Screen name="StoryDetail" component={StoryDetailScreen} />
+        <Stack.Screen name="Quiz" component={QuizScreen} />
+        <Stack.Screen name="ProgressDashboard" component={ProgressDashboardScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="ReviewSchedule" component={ReviewScheduleScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

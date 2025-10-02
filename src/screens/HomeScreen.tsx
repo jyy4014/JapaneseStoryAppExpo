@@ -71,8 +71,8 @@ function HomeScreen() {
           스토리를 들으며 자연스럽게 단어를 학습해보세요.
         </Typography>
         <View style={styles.actions}>
-          <StyledButton title="학습 현황 보기" onPress={() => navigation.navigate('ProgressDashboard')} />
-          <StyledButton title="오늘의 퀴즈" onPress={() => {}} variant="secondary" />
+          <StyledButton title="학습 현황" onPress={() => navigation.navigate('ProgressDashboard')} />
+          <StyledButton title="설정" onPress={() => navigation.navigate('Settings')} variant="secondary" />
         </View>
       </View>
 
