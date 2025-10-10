@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
@@ -6,7 +7,7 @@ import {
   initializeAuth,
   type Auth,
   getReactNativePersistence,
-} from 'firebase/auth/react-native';
+} from 'firebase/auth';
 
 const firebaseConfig = Constants.expoConfig?.extra?.firebaseConfig;
 
@@ -18,12 +19,16 @@ const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) 
 
 let auth: Auth;
 
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-} catch (error) {
+if (Platform.OS === 'web') {
   auth = getAuth(app);
+} else {
+  try {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  } catch (error) {
+    auth = getAuth(app);
+  }
 }
 
 export { app, auth };

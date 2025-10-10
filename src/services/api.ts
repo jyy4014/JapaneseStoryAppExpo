@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import useAuthStore from '../store/useAuthStore';
+import logger from '../utils/logger';
 
 const API_BASE_URL =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
@@ -19,27 +20,45 @@ async function request<TResponse, TBody = unknown>(
   { method = 'GET', body, headers = {}, requiresAuth = false }: RequestOptions<TBody> = {},
 ): Promise<TResponse> {
   const { idToken } = useAuthStore.getState();
+  logger.debug('ApiService', 'request:start', { path, method, requiresAuth });
 
   if (requiresAuth && !idToken) {
+    logger.warn('ApiService', 'request:missingToken', { path, method });
     throw new Error('로그인이 필요합니다.');
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(requiresAuth && idToken ? { Authorization: `Bearer ${idToken}` } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(requiresAuth && idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (networkError) {
+    logger.error('ApiService', 'request:networkError', { path, method, error: networkError });
+    throw networkError;
+  }
 
   if (!response.ok) {
     const message = await response.text();
+    logger.warn('ApiService', 'request:failed', {
+      path,
+      method,
+      status: response.status,
+      statusText: response.statusText,
+      body: message,
+    });
     throw new Error(message || '요청에 실패했습니다.');
   }
 
-  return (await response.json()) as TResponse;
+  const data = (await response.json()) as TResponse;
+  logger.debug('ApiService', 'request:success', { path, method, status: response.status });
+  return data;
 }
 
 export const ApiService = {

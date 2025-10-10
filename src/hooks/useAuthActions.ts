@@ -10,6 +10,7 @@ import {
 import { auth } from '../utils/firebase';
 import useAuthStore from '../store/useAuthStore';
 import { clearStoredAuth, loadAuthTokens, persistAuthTokens } from '../utils/storage';
+import logger from '../utils/logger';
 
 function mapTokens(user: User | null) {
   if (!user) {
@@ -35,21 +36,25 @@ export function useAuthBootstrap() {
   const { setTokens, clearTokens, setInitializing } = useAuthStore();
 
   useEffect(() => {
+    logger.debug('AuthActions', 'bootstrap:start');
     let isMounted = true;
     let unsubscribe: ReturnType<typeof onAuthStateChanged> | null = null;
 
     const bootstrap = async () => {
       const persisted = await loadAuthTokens();
       if (persisted?.idToken) {
+        logger.debug('AuthActions', 'bootstrap:foundPersistedToken');
         setTokens(persisted);
       }
 
       unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (!isMounted) {
+          logger.debug('AuthActions', 'bootstrap:unmounted');
           return;
         }
 
         if (!user) {
+          logger.debug('AuthActions', 'bootstrap:userSignedOut');
           clearTokens();
           await clearStoredAuth();
           setInitializing(false);
@@ -58,13 +63,17 @@ export function useAuthBootstrap() {
 
         await getIdToken(user, true);
         const tokens = mapTokens(user);
+        logger.debug('AuthActions', 'bootstrap:setTokens', { hasIdToken: !!tokens.idToken });
         setTokens(tokens);
         await persistAuthTokens(tokens);
         setInitializing(false);
       });
     };
 
-    bootstrap();
+    bootstrap().catch((error) => {
+      logger.error('AuthActions', 'bootstrap:error', error);
+      setInitializing(false);
+    });
 
     return () => {
       isMounted = false;
@@ -79,25 +88,31 @@ export default function useAuthActions() {
   const { setTokens, clearTokens } = useAuthStore();
 
   const handleSignUp = useCallback(async (email: string, password: string) => {
+    logger.debug('AuthActions', 'signUp:start', { email });
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     const tokens = mapTokens(credential.user);
     setTokens(tokens);
     await persistAuthTokens(tokens);
+    logger.debug('AuthActions', 'signUp:success', { email });
     return credential.user;
   }, [setTokens]);
 
   const handleSignIn = useCallback(async (email: string, password: string) => {
+    logger.debug('AuthActions', 'signIn:start', { email });
     const credential = await signInWithEmailAndPassword(auth, email, password);
     const tokens = mapTokens(credential.user);
     setTokens(tokens);
     await persistAuthTokens(tokens);
+    logger.debug('AuthActions', 'signIn:success', { email });
     return credential.user;
   }, [setTokens]);
 
   const handleSignOut = useCallback(async () => {
+    logger.debug('AuthActions', 'signOut:start');
     await signOut(auth);
     clearTokens();
     await clearStoredAuth();
+    logger.debug('AuthActions', 'signOut:success');
   }, [clearTokens]);
 
   return {

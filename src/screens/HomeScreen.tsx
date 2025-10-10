@@ -12,6 +12,7 @@ import { ApiService } from '../services/api';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import InfoBanner from '../components/common/InfoBanner';
 import useAuthStore from '../store/useAuthStore';
+import logger from '../utils/logger';
 
 const levelFilters: Array<typeof useStoryStore.initialState.selectedLevel> = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
@@ -31,20 +32,24 @@ function HomeScreen() {
     let cancelled = false;
 
     const fetchStories = async () => {
+      logger.debug('HomeScreen', 'fetchStories:start', { selectedLevel });
       setLoading(true);
       setError(undefined);
       try {
         const response = await ApiService.getStories(selectedLevel === 'ALL' ? undefined : selectedLevel);
         if (!cancelled) {
+          logger.debug('HomeScreen', 'fetchStories:success', { count: response.length });
           setStories(response);
         }
       } catch (fetchError) {
         if (!cancelled) {
+          logger.error('HomeScreen', 'fetchStories:error', fetchError);
           setError(fetchError instanceof Error ? fetchError.message : '사연을 불러오지 못했습니다.');
           setStories([]);
         }
       } finally {
         if (!cancelled) {
+          logger.debug('HomeScreen', 'fetchStories:finished');
           setLoading(false);
         }
       }

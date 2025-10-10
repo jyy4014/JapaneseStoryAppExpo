@@ -28,3 +28,5 @@ export async function clearStoredAuth() {
   await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+
+
