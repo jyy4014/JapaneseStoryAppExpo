@@ -3,9 +3,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Typography from '../components/common/Typography';
 import StyledButton from '../components/common/StyledButton';
+import InfoBanner from '../components/common/InfoBanner';
 import SettingsGroup from '../components/settings/SettingsGroup';
 import WordChip from '../components/common/WordChip';
 import useUserSettingsStore from '../store/useUserSettingsStore';
+import useAuthStore from '../store/useAuthStore';
+import useAuthActions from '../hooks/useAuthActions';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import { colors } from '../theme/colors';
 
 const levels: Array<'N5' | 'N4' | 'N3' | 'N2' | 'N1'> = ['N5', 'N4', 'N3', 'N2', 'N1'];
@@ -16,13 +22,24 @@ const languages = [
 ];
 
 function SettingsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { idToken } = useAuthStore();
+  const { signOut } = useAuthActions();
   const { settings, isLoading, error, loadSettings, saveProfile, savePreferences, saveNotifications } =
     useUserSettingsStore();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    if (!idToken) {
+      navigation.replace('AuthLanding');
+    }
+  }, [idToken, navigation]);
+
+  useEffect(() => {
+    if (idToken) {
+      loadSettings();
+    }
+  }, [idToken, loadSettings]);
 
   const handlePreferredLevel = async (level: 'N5' | 'N4' | 'N3' | 'N2' | 'N1') => {
     setSaving(true);
@@ -65,9 +82,7 @@ function SettingsScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loader}>
-          <Typography variant="body" color={colors.secondary}>
-            {error}
-          </Typography>
+          <InfoBanner message={error} variant="error" />
           <StyledButton title="다시 시도" onPress={loadSettings} style={styles.retryButton} />
         </View>
       </SafeAreaView>
@@ -85,12 +100,7 @@ function SettingsScreen() {
         </Typography>
 
         {error ? (
-          <View style={styles.errorBanner}>
-            <Typography variant="body" color={colors.secondary}>
-              {error}
-            </Typography>
-            <StyledButton title="다시 시도" onPress={loadSettings} style={styles.retryButton} />
-          </View>
+          <InfoBanner message={error} variant="error" style={styles.errorBanner} />
         ) : null}
 
         {settings ? (
@@ -155,8 +165,15 @@ function SettingsScreen() {
             </SettingsGroup>
 
             <SettingsGroup title="계정 관리">
-              <StyledButton title="토큰 갱신" onPress={() => {}} />
-              <StyledButton title="로그아웃" onPress={() => {}} variant="secondary" />
+            <StyledButton title="토큰 갱신" onPress={() => navigation.navigate('SignIn')} />
+            <StyledButton
+              title="로그아웃"
+              onPress={async () => {
+                await signOut();
+                navigation.replace('AuthLanding');
+              }}
+              variant="secondary"
+            />
             </SettingsGroup>
           </>
         ) : null}

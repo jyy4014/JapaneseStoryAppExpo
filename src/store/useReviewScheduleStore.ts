@@ -1,11 +1,11 @@
 import { create } from 'zustand';
-import dayjs from 'dayjs';
 import {
   fetchReviewSchedule,
   fetchReviewSummary,
   type ReviewScheduleEntry,
   type ReviewSummary,
 } from '../services/reviewScheduleApi';
+import { today } from '../utils/date';
 
 interface ReviewScheduleState {
   summary: ReviewSummary | null;
@@ -21,7 +21,7 @@ interface ReviewScheduleState {
 const useReviewScheduleStore = create<ReviewScheduleState>((set, get) => ({
   summary: null,
   schedule: [],
-  selectedDate: dayjs().format('YYYY-MM-DD'),
+  selectedDate: today(),
   isLoading: false,
   error: undefined,
   loadSchedule: async (from, to) => {

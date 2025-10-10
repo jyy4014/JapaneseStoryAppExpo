@@ -10,11 +10,14 @@ import useStoryStore from '../store/useStoryStore';
 import { colors } from '../theme/colors';
 import { ApiService } from '../services/api';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import InfoBanner from '../components/common/InfoBanner';
+import useAuthStore from '../store/useAuthStore';
 
 const levelFilters: Array<typeof useStoryStore.initialState.selectedLevel> = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
 function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { idToken } = useAuthStore();
   const stories = useStoryStore((state) => state.stories);
   const selectedLevel = useStoryStore((state) => state.selectedLevel);
   const isLoading = useStoryStore((state) => state.isLoading);
@@ -68,10 +71,25 @@ function HomeScreen() {
           스토리를 들으며 자연스럽게 단어를 학습해보세요.
         </Typography>
         <View style={styles.actions}>
-          <StyledButton title="학습 현황" onPress={() => navigation.navigate('ProgressDashboard')} />
-          <StyledButton title="설정" onPress={() => navigation.navigate('Settings')} variant="secondary" />
+          <StyledButton
+            title="학습 현황"
+            onPress={() => navigation.navigate(idToken ? 'ProgressDashboard' : 'AuthLanding')}
+          />
+          <StyledButton
+            title="설정"
+            onPress={() => navigation.navigate(idToken ? 'Settings' : 'AuthLanding')}
+            variant="secondary"
+          />
         </View>
       </View>
+
+      {!idToken ? (
+        <InfoBanner
+          message="로그인하면 학습 현황과 복습 일정을 저장할 수 있어요."
+          variant="info"
+          style={styles.banner}
+        />
+      ) : null}
 
       <View style={styles.levelFilterRow}>
         <Typography variant="subtitle">학습 레벨</Typography>
@@ -143,6 +161,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
     flexDirection: 'row',
     gap: 12,
+  },
+  banner: {
+    marginTop: 16,
   },
   levelFilterRow: {
     marginTop: 24,

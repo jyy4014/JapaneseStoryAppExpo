@@ -7,8 +7,10 @@ import StyledButton from '../components/common/StyledButton';
 import StatCard from '../components/dashboard/StatCard';
 import ReviewWordList from '../components/dashboard/ReviewWordList';
 import ContinueListeningList from '../components/dashboard/ContinueListeningList';
+import InfoBanner from '../components/common/InfoBanner';
 import { colors } from '../theme/colors';
 import useProgressStore from '../store/useProgressStore';
+import useAuthStore from '../store/useAuthStore';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -24,10 +26,15 @@ const ProgressDashboardScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { summary, continueEpisodes, reviewWords, isLoading, error, loadDashboard, refreshReviewWords } =
     useProgressStore();
+  const { idToken } = useAuthStore();
 
   useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
+    if (idToken) {
+      loadDashboard();
+    } else {
+      navigation.replace('AuthLanding');
+    }
+  }, [idToken, loadDashboard, navigation]);
 
   const stats = useMemo(() => {
     if (!summary) {
@@ -66,12 +73,7 @@ const ProgressDashboardScreen = () => {
         </Typography>
 
         {error ? (
-          <View style={styles.errorBanner}>
-            <Typography variant="body" color={colors.secondary}>
-              {error}
-            </Typography>
-          <StyledButton title="다시 시도" onPress={loadDashboard} style={styles.retryButton} />
-          </View>
+          <InfoBanner message={error} variant="error" style={styles.errorBanner} />
         ) : null}
 
         <View style={styles.statGrid}>

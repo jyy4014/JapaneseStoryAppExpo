@@ -1,14 +1,16 @@
 import { create } from 'zustand';
 
-type AuthTokens = {
+export type AuthTokens = {
   idToken: string | null;
   refreshToken: string | null;
   expiresAt: number | null; // epoch milliseconds
 };
 
 type AuthState = AuthTokens & {
+  isInitializing: boolean;
   setTokens: (payload: AuthTokens) => void;
   clearTokens: () => void;
+  setInitializing: (value: boolean) => void;
 };
 
 const initialState: AuthTokens = {
@@ -19,9 +21,18 @@ const initialState: AuthTokens = {
 
 const useAuthStore = create<AuthState>((set) => ({
   ...initialState,
-  setTokens: ({ idToken, refreshToken, expiresAt }) =>
-    set({ idToken, refreshToken, expiresAt }),
-  clearTokens: () => set({ ...initialState }),
+  isInitializing: true,
+  setTokens: (payload) =>
+    set((state) => ({
+      ...state,
+      ...payload,
+    })),
+  clearTokens: () =>
+    set((state) => ({
+      ...state,
+      ...initialState,
+    })),
+  setInitializing: (value) => set((state) => ({ ...state, isInitializing: value })),
 }));
 
 export default useAuthStore;

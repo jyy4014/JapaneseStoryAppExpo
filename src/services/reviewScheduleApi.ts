@@ -28,10 +28,10 @@ export interface ReviewSummary {
 }
 
 export async function fetchReviewSchedule(from: string, to: string): Promise<ReviewScheduleEntry[]> {
-  return ApiService.get<ReviewScheduleEntry[]>(`/api/progress/review?from=${from}&to=${to}`);
+  return ApiService.get<ReviewScheduleEntry[]>(`/api/progress/review?from=${from}&to=${to}`, { requiresAuth: true } as never);
 }
 
 export async function fetchReviewSummary(): Promise<ReviewSummary> {
-  return ApiService.get<ReviewSummary>('/api/progress/review/summary');
+  return ApiService.get<ReviewSummary>('/api/progress/review/summary', { requiresAuth: true } as never);
 }
 

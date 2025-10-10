@@ -6,8 +6,13 @@ import Typography from '../components/common/Typography';
 import StyledButton from '../components/common/StyledButton';
 import ReviewCalendar from '../components/review/ReviewCalendar';
 import ReviewWordCard from '../components/review/ReviewWordCard';
+import InfoBanner from '../components/common/InfoBanner';
 import useReviewScheduleStore from '../store/useReviewScheduleStore';
+import useAuthStore from '../store/useAuthStore';
 import { colors } from '../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 
 function getWeekRange(date: string) {
   const start = dayjs(date).startOf('week');
@@ -16,13 +21,19 @@ function getWeekRange(date: string) {
 }
 
 const ReviewScheduleScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { summary, schedule, selectedDate, isLoading, error, loadSchedule, selectDate } =
     useReviewScheduleStore();
+  const { idToken } = useAuthStore();
 
   useEffect(() => {
+    if (!idToken) {
+      navigation.replace('AuthLanding');
+      return;
+    }
     const { from, to } = getWeekRange(dayjs().format('YYYY-MM-DD'));
     loadSchedule(from, to);
-  }, [loadSchedule]);
+  }, [idToken, loadSchedule, navigation]);
 
   const selectedWords = useMemo(() => {
     return schedule.find((item) => item.date === selectedDate)?.words ?? [];
@@ -43,12 +54,7 @@ const ReviewScheduleScreen = () => {
         </Typography>
 
         {error ? (
-          <View style={styles.errorBanner}>
-            <Typography variant="body" color={colors.secondary}>
-              {error}
-            </Typography>
-            <StyledButton title="다시 시도" onPress={() => loadSchedule(...Object.values(getWeekRange(selectedDate)))} />
-          </View>
+          <InfoBanner message={error} variant="error" style={styles.errorBanner} />
         ) : null}
 
         {summary ? (
