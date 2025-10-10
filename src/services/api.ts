@@ -2,7 +2,8 @@ import Constants from 'expo-constants';
 import useAuthStore from '../store/useAuthStore';
 
 const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? 'http://localhost:3000';
+  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
+  "https://asia-northeast3-jpanstudy.cloudfunctions.net/api";
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -15,12 +16,12 @@ interface RequestOptions<Body> {
 
 async function request<TResponse, TBody = unknown>(
   path: string,
-  { method = 'GET', body, headers = {}, requiresAuth = true }: RequestOptions<TBody> = {},
+  { method = 'GET', body, headers = {}, requiresAuth = false }: RequestOptions<TBody> = {},
 ): Promise<TResponse> {
   const { idToken } = useAuthStore.getState();
 
   if (requiresAuth && !idToken) {
-    throw new Error('인증 토큰이 필요합니다.');
+    throw new Error('로그인이 필요합니다.');
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -58,7 +59,7 @@ export const ApiService = {
     score: number;
     playPositionMs: number;
   }) {
-    return request('/api/progress/episode', { method: 'POST', body: payload });
+    return request('/api/progress/episode', { method: 'POST', body: payload, requiresAuth: true });
   },
   saveWordProgress(payload: {
     wordId: string;
@@ -67,15 +68,16 @@ export const ApiService = {
     repetitions: number;
     correct: boolean;
   }) {
-    return request('/api/progress/word', { method: 'POST', body: payload });
+    return request('/api/progress/word', { method: 'POST', body: payload, requiresAuth: true });
   },
   getReviewWords() {
-    return request('/api/progress/review');
+    return request('/api/progress/review', { requiresAuth: true });
   },
   createQuizAttempt(quizId: string) {
     return request('/api/quiz/attempts', {
       method: 'POST',
       body: { quizId },
+      requiresAuth: true,
     });
   },
   submitQuizAttempt(
@@ -88,6 +90,7 @@ export const ApiService = {
     return request(`/api/quiz/attempts/${attemptId}/submit`, {
       method: 'POST',
       body: payload,
+      requiresAuth: true,
     });
   },
   saveRecording(payload: {
@@ -96,7 +99,7 @@ export const ApiService = {
     durationMs: number;
     score: number;
   }) {
-    return request('/api/recordings', { method: 'POST', body: payload });
+    return request('/api/recordings', { method: 'POST', body: payload, requiresAuth: true });
   },
   get<TResponse>(path: string) {
     return request<TResponse>(path);

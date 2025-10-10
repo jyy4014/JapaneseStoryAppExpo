@@ -15,17 +15,14 @@ const levelFilters: Array<typeof useStoryStore.initialState.selectedLevel> = ['A
 
 function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { stories, selectedLevel, isLoading, error, setStories, setSelectedLevel, setLoading, setError } =
-    useStoryStore((state) => ({
-      stories: state.stories,
-      selectedLevel: state.selectedLevel,
-      isLoading: state.isLoading,
-      error: state.error,
-      setStories: state.setStories,
-      setSelectedLevel: state.setSelectedLevel,
-      setLoading: state.setLoading,
-      setError: state.setError,
-    }));
+  const stories = useStoryStore((state) => state.stories);
+  const selectedLevel = useStoryStore((state) => state.selectedLevel);
+  const isLoading = useStoryStore((state) => state.isLoading);
+  const error = useStoryStore((state) => state.error);
+  const setStories = useStoryStore((state) => state.setStories);
+  const setSelectedLevel = useStoryStore((state) => state.setSelectedLevel);
+  const setLoading = useStoryStore((state) => state.setLoading);
+  const setError = useStoryStore((state) => state.setError);
 
   useEffect(() => {
     let cancelled = false;

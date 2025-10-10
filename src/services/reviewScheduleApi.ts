@@ -34,3 +34,4 @@ export async function fetchReviewSchedule(from: string, to: string): Promise<Rev
 export async function fetchReviewSummary(): Promise<ReviewSummary> {
   return ApiService.get<ReviewSummary>('/api/progress/review/summary');
 }
+

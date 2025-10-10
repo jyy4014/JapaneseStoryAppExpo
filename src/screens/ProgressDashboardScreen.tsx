@@ -70,7 +70,7 @@ const ProgressDashboardScreen = () => {
             <Typography variant="body" color={colors.secondary}>
               {error}
             </Typography>
-            <StyledButton title="다시 시도" onPress={loadDashboard} style={styles.retryButton} />
+          <StyledButton title="다시 시도" onPress={loadDashboard} style={styles.retryButton} />
           </View>
         ) : null}
 

@@ -1,1 +1,44 @@
-import { ExpoConfig } from 'expo/config';\nimport 'dotenv/config';\n\nconst config: ExpoConfig = {\n  name: 'JapaneseStoryAppExpo',\n  slug: 'japanese-story-app-expo',\n  version: '1.0.0',\n  orientation: 'portrait',\n  userInterfaceStyle: 'light',\n  splash: {\n    image: './assets/icon.png',\n    resizeMode: 'contain',\n    backgroundColor: '#ffffff',\n  },\n  assets: ['./assets/fonts/'],\n  extra: {\n    apiBaseUrl: process.env.API_BASE_URL,\n  },\n  ios: {\n    supportsTablet: true,\n  },\n  android: {\n    adaptiveIcon: {\n      foregroundImage: './assets/adaptive-icon.png',\n      backgroundColor: '#ffffff',\n    },\n  },\n  web: {\n    bundler: 'metro',\n    output: 'single',\n    favicon: './assets/favicon.png',\n  },\n};\n\nexport default config;\n
+import { ExpoConfig } from 'expo/config';
+import 'dotenv/config';
+
+const config: ExpoConfig = {
+  name: 'JapaneseStoryAppExpo',
+  slug: 'japanese-story-app-expo',
+  version: '1.0.0',
+  orientation: 'portrait',
+  userInterfaceStyle: 'light',
+  splash: {
+    image: './assets/icon.png',
+    resizeMode: 'contain',
+    backgroundColor: '#ffffff',
+  },
+  assets: ['./assets/fonts/'],
+  extra: {
+    apiBaseUrl: process.env.API_BASE_URL ?? 'https://asia-northeast3-jpanstudy.cloudfunctions.net/api',
+    firebaseConfig: {
+      apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
+      authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+      projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+      storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+      messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
+      appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
+    },
+  },
+  ios: {
+    supportsTablet: true,
+  },
+  android: {
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#ffffff',
+    },
+  },
+  web: {
+    bundler: 'metro',
+    output: 'single',
+    favicon: './assets/favicon.png',
+  },
+};
+
+export default config;
+

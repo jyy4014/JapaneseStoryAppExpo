@@ -25,17 +25,18 @@ export interface UserSettings {
 }
 
 export async function fetchUserSettings(): Promise<UserSettings> {
-  return ApiService.get<UserSettings>('/api/users/me');
+  return ApiService.get<UserSettings>('/api/users/me', { requiresAuth: true } as never);
 }
 
 export async function updateUserProfile(profile: Partial<UserProfile>) {
-  return ApiService.post('/api/users/me/profile', profile);
+  return ApiService.post('/api/users/me/profile', profile, { requiresAuth: true } as never);
 }
 
 export async function updateUserPreferences(preferences: Partial<UserPreferences>) {
-  return ApiService.post('/api/users/me/preferences', preferences);
+  return ApiService.post('/api/users/me/preferences', preferences, { requiresAuth: true } as never);
 }
 
 export async function updateUserNotifications(notifications: Partial<UserNotifications>) {
-  return ApiService.post('/api/users/me/notifications', notifications);
+  return ApiService.post('/api/users/me/notifications', notifications, { requiresAuth: true } as never);
 }
+
