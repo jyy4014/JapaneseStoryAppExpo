@@ -7,7 +7,7 @@ import {
   getIdToken,
   User,
 } from 'firebase/auth';
-import { auth } from '../utils/firebase';
+import { auth, isFirebaseConfigured } from '../utils/firebase';
 import useAuthStore from '../store/useAuthStore';
 import { clearStoredAuth, loadAuthTokens, persistAuthTokens } from '../utils/storage';
 import logger from '../utils/logger';
@@ -45,6 +45,12 @@ export function useAuthBootstrap() {
       if (persisted?.idToken) {
         logger.debug('AuthActions', 'bootstrap:foundPersistedToken');
         setTokens(persisted);
+      }
+
+      if (!isFirebaseConfigured || !auth) {
+        logger.warn('AuthActions', 'bootstrap:firebaseNotConfigured');
+        setInitializing(false);
+        return;
       }
 
       unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -88,6 +94,10 @@ export default function useAuthActions() {
   const { setTokens, clearTokens } = useAuthStore();
 
   const handleSignUp = useCallback(async (email: string, password: string) => {
+    if (!isFirebaseConfigured || !auth) {
+      logger.warn('AuthActions', 'signUp:firebaseNotConfigured');
+      throw new Error('현재 환경에서는 회원가입 기능을 사용할 수 없습니다.');
+    }
     logger.debug('AuthActions', 'signUp:start', { email });
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     const tokens = mapTokens(credential.user);
@@ -98,6 +108,10 @@ export default function useAuthActions() {
   }, [setTokens]);
 
   const handleSignIn = useCallback(async (email: string, password: string) => {
+    if (!isFirebaseConfigured || !auth) {
+      logger.warn('AuthActions', 'signIn:firebaseNotConfigured');
+      throw new Error('현재 환경에서는 로그인 기능을 사용할 수 없습니다.');
+    }
     logger.debug('AuthActions', 'signIn:start', { email });
     const credential = await signInWithEmailAndPassword(auth, email, password);
     const tokens = mapTokens(credential.user);
@@ -108,6 +122,12 @@ export default function useAuthActions() {
   }, [setTokens]);
 
   const handleSignOut = useCallback(async () => {
+    if (!isFirebaseConfigured || !auth) {
+      logger.warn('AuthActions', 'signOut:firebaseNotConfigured');
+      clearTokens();
+      await clearStoredAuth();
+      return;
+    }
     logger.debug('AuthActions', 'signOut:start');
     await signOut(auth);
     clearTokens();
@@ -121,4 +141,6 @@ export default function useAuthActions() {
     signOut: handleSignOut,
   };
 }
+
+export { isFirebaseConfigured };
 

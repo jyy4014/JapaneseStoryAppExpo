@@ -9,7 +9,7 @@ import TextInputField from '../../components/common/TextInputField';
 import InfoBanner from '../../components/common/InfoBanner';
 import { colors } from '../../theme/colors';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
-import useAuthActions from '../../hooks/useAuthActions';
+import useAuthActions, { isFirebaseConfigured } from '../../hooks/useAuthActions';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -93,7 +93,11 @@ const SignUpScreen = () => {
           />
         </View>
 
-        <StyledButton title="회원가입" onPress={handleSubmit} disabled={isSubmitting} />
+        <StyledButton
+          title="회원가입"
+          onPress={handleSubmit}
+          disabled={isSubmitting || !isFirebaseConfigured}
+        />
 
         <View style={styles.footer}>
           <Typography variant="body" color={colors.textSecondary}>

@@ -7,6 +7,7 @@ import { colors } from '../../theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
+import { isFirebaseConfigured } from '../../hooks/useAuthActions';
 
 const AuthLandingScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -22,8 +23,17 @@ const AuthLandingScreen = () => {
         </Typography>
 
         <View style={styles.buttonGroup}>
-          <StyledButton title="로그인" onPress={() => navigation.navigate('SignIn')} />
-          <StyledButton title="회원가입" onPress={() => navigation.navigate('SignUp')} variant="secondary" />
+          <StyledButton
+            title="로그인"
+            onPress={() => navigation.navigate('SignIn')}
+            disabled={!isFirebaseConfigured}
+          />
+          <StyledButton
+            title="회원가입"
+            onPress={() => navigation.navigate('SignUp')}
+            variant="secondary"
+            disabled={!isFirebaseConfigured}
+          />
         </View>
       </View>
     </SafeAreaView>

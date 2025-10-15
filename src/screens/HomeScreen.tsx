@@ -13,6 +13,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import InfoBanner from '../components/common/InfoBanner';
 import useAuthStore from '../store/useAuthStore';
 import logger from '../utils/logger';
+import StoryHighlightCarousel from '../components/home/StoryHighlightCarousel';
 
 const levelFilters: Array<typeof useStoryStore.initialState.selectedLevel> = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
@@ -66,6 +67,14 @@ function HomeScreen() {
     return stories;
   }, [stories]);
 
+  const highlightStories = filteredStories.slice(0, 5).map((story) => ({
+    id: story.id,
+    title: story.title,
+    summary: story.summary,
+    thumbnailUrl: story.thumbnailUrl,
+    onPress: () => navigation.navigate('StoryDetail', { storyId: story.id }),
+  }));
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -77,12 +86,12 @@ function HomeScreen() {
         </Typography>
         <View style={styles.actions}>
           <StyledButton
-            title="학습 현황"
-            onPress={() => navigation.navigate(idToken ? 'ProgressDashboard' : 'AuthLanding')}
+            title="난이도 선택"
+            onPress={() => navigation.navigate('LevelSelection')}
           />
           <StyledButton
-            title="설정"
-            onPress={() => navigation.navigate(idToken ? 'Settings' : 'AuthLanding')}
+            title="학습 현황"
+            onPress={() => navigation.navigate(idToken ? 'ProgressDashboard' : 'AuthLanding')}
             variant="secondary"
           />
         </View>
@@ -95,6 +104,8 @@ function HomeScreen() {
           style={styles.banner}
         />
       ) : null}
+
+      <StoryHighlightCarousel stories={highlightStories} />
 
       <View style={styles.levelFilterRow}>
         <Typography variant="subtitle">학습 레벨</Typography>

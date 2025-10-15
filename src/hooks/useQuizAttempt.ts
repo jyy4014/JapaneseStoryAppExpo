@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ApiService } from '../services/api';
+import useAuthStore from '../store/useAuthStore';
 
 export interface QuizQuestion {
   id: string;
@@ -38,6 +39,11 @@ export default function useQuizAttempt({ quiz }: UseQuizAttemptOptions) {
     if (!quiz) {
       return;
     }
+    const { idToken } = useAuthStore.getState();
+    if (!idToken) {
+      setError('로그인이 필요한 기능입니다.');
+      return;
+    }
     setError(undefined);
     try {
       const response = await ApiService.createQuizAttempt(quiz.id);
@@ -73,6 +79,11 @@ export default function useQuizAttempt({ quiz }: UseQuizAttemptOptions) {
 
   const submit = useCallback(async () => {
     if (!quiz || !attemptId) {
+      return;
+    }
+    const { idToken } = useAuthStore.getState();
+    if (!idToken) {
+      setError('로그인이 필요한 기능입니다.');
       return;
     }
 

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:19006';
+const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:19008';
 
 test.describe('Home Screen', () => {
   test.beforeEach(async ({ page }) => {

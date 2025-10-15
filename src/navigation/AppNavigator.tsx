@@ -7,10 +7,13 @@ import QuizScreen from '../screens/QuizScreen';
 import ProgressDashboardScreen from '../screens/ProgressDashboardScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ReviewScheduleScreen from '../screens/ReviewScheduleScreen';
+import LevelSelectionScreen from '../screens/LevelSelectionScreen';
+import EpisodeListScreen from '../screens/EpisodeListScreen';
 import AuthLandingScreen from '../screens/auth/AuthLandingScreen';
 import SignInScreen from '../screens/auth/SignInScreen';
 import SignUpScreen from '../screens/auth/SignUpScreen';
 import useAuthStore from '../store/useAuthStore';
+import type { StoryLevel } from '../store/useStoryStore';
 import { useAuthBootstrap } from '../hooks/useAuthActions';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
@@ -22,6 +25,8 @@ export type RootStackParamList = {
   ProgressDashboard: undefined;
   Settings: undefined;
   ReviewSchedule: undefined;
+  LevelSelection: undefined;
+  EpisodeList: { level: StoryLevel };
   AuthLanding: undefined;
   SignIn: undefined;
   SignUp: undefined;
@@ -55,6 +60,8 @@ function AppNavigator() {
         <Stack.Screen name="ProgressDashboard" component={idToken ? ProgressDashboardScreen : AuthLandingScreen} />
         <Stack.Screen name="Settings" component={idToken ? SettingsScreen : AuthLandingScreen} />
         <Stack.Screen name="ReviewSchedule" component={idToken ? ReviewScheduleScreen : AuthLandingScreen} />
+        <Stack.Screen name="LevelSelection" component={LevelSelectionScreen} />
+        <Stack.Screen name="EpisodeList" component={EpisodeListScreen} />
         <Stack.Screen name="AuthLanding" component={AuthLandingScreen} />
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
