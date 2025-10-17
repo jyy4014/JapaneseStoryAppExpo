@@ -29,13 +29,13 @@ export interface ReviewWord {
 }
 
 export async function fetchProgressSummary(): Promise<ProgressSummary> {
-  return ApiService.get('/api/progress/summary', { requiresAuth: true } as never);
+  return ApiService.get('/progress/summary', { requiresAuth: true });
 }
 
 export async function fetchContinueEpisodes(): Promise<ContinueEpisode[]> {
-  return ApiService.get('/api/progress/continue', { requiresAuth: true } as never);
+  return ApiService.get('/progress/continue', { requiresAuth: true });
 }
 
 export async function fetchReviewWords(limit = 10): Promise<ReviewWord[]> {
-  return ApiService.get(`/api/progress/review?limit=${limit}`, { requiresAuth: true } as never);
+  return ApiService.get(`/progress/review?limit=${limit}`, { requiresAuth: true });
 }

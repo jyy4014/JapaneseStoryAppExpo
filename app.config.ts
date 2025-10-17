@@ -14,7 +14,16 @@ const config: ExpoConfig = {
   },
   assets: ['./assets/fonts/'],
   extra: {
-    apiBaseUrl: process.env.API_BASE_URL ?? 'https://asia-northeast3-jpanstudy.cloudfunctions.net/api',
+    apiBaseUrl:
+      process.env.API_BASE_URL ?? 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api',
+    supabaseFunctionsUrl:
+      process.env.SUPABASE_FUNCTIONS_URL ?? 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1',
+    supabaseAnonKey:
+      process.env.SUPABASE_ANON_KEY ??
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
+    supabaseStorageBaseUrl:
+      process.env.SUPABASE_STORAGE_BASE_URL ??
+      'https://yzcscpcrakpdfsvluyej.supabase.co/storage/v1/object/public',
     firebaseConfig: {
       apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
       authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',

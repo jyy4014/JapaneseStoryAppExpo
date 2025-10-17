@@ -3,8 +3,8 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import SentenceCard from '../components/common/SentenceCard';
 import Typography from '../components/common/Typography';
-import StyledButton from '../components/common/StyledButton';
 import TargetWordList from '../components/story/TargetWordList';
+import StoryAudioPlayer from '../components/story/StoryAudioPlayer';
 import useStoryDetail from '../hooks/useStoryDetail';
 import { colors } from '../theme/colors';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -50,15 +50,31 @@ function StoryDetailScreen({ route, navigation }: Props) {
     return null;
   }
 
+  const audioAssets = detail.audioAssets.filter((asset) => asset.storagePath);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Typography variant="subtitle" color={colors.textSecondary}>
         {detail.level} 레벨 • 약 {detail.durationSeconds ? Math.ceil(detail.durationSeconds / 60) : '?'}분
       </Typography>
-      {detail.summary && (
+
+      {detail.summary ? (
         <Typography variant="body" style={styles.summary}>
           {detail.summary}
         </Typography>
+      ) : null}
+
+      {audioAssets.length > 0 ? (
+        <StoryAudioPlayer
+          title="스토리 오디오"
+          assets={audioAssets}
+        />
+      ) : (
+        <View style={styles.audioPlaceholder}>
+          <Typography variant="body" color={colors.textSecondary}>
+            아직 업로드된 오디오가 없습니다.
+          </Typography>
+        </View>
       )}
 
       <TargetWordList
@@ -66,14 +82,9 @@ function StoryDetailScreen({ route, navigation }: Props) {
           id: word.id,
           kanji: word.kanji,
           kana: word.kana,
-          meaningKo: word.meaningKo,
+          meaningKo: word.meaningKo ?? '의미 미등록',
         }))}
       />
-
-      <View style={styles.sectionHeader}>
-        <Typography variant="subtitle">스크립트</Typography>
-        <StyledButton title="오디오 재생" onPress={() => {}} />
-      </View>
 
       <View style={styles.sentenceList}>
         {detail.sentences.map((sentence) => (
@@ -82,7 +93,6 @@ function StoryDetailScreen({ route, navigation }: Props) {
             order={sentence.order}
             jpText={sentence.jpText}
             koText={sentence.koText}
-            isTarget={sentence.targetWordIds.length > 0}
           />
         ))}
       </View>
@@ -112,12 +122,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 16,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  audioPlaceholder: {
     marginTop: 24,
-    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
   },
   sentenceList: {
     marginTop: 8,

@@ -2,9 +2,17 @@ import Constants from 'expo-constants';
 import useAuthStore from '../store/useAuthStore';
 import logger from '../utils/logger';
 
-const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  "https://asia-northeast3-jpanstudy.cloudfunctions.net/api";
+const SUPABASE_FUNCTIONS_URL = Constants.expoConfig?.extra?.supabaseFunctionsUrl as string | undefined;
+const API_BASE_URL = SUPABASE_FUNCTIONS_URL
+  ? `${SUPABASE_FUNCTIONS_URL.replace(/\/$/, '')}/api`
+  : 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api';
+
+const SUPABASE_ANON_KEY = Constants.expoConfig?.extra?.supabaseAnonKey as string | undefined;
+const SUPABASE_STORAGE_BASE_URL = Constants.expoConfig?.extra?.supabaseStorageBaseUrl as string | undefined;
+
+export function getSupabaseStorageBaseUrl() {
+  return SUPABASE_STORAGE_BASE_URL ?? 'https://yzcscpcrakpdfsvluyej.supabase.co/storage/v1/object/public';
+}
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -22,19 +30,24 @@ async function request<TResponse, TBody = unknown>(
   const { idToken } = useAuthStore.getState();
   logger.debug('ApiService', 'request:start', { path, method, requiresAuth });
 
-  if (requiresAuth && !idToken) {
-    logger.warn('ApiService', 'request:missingToken', { path, method });
-    throw new Error('로그인이 필요합니다.');
-  }
-
   let response: Response;
 
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    const url = path.startsWith('http') ? path : `${API_BASE_URL}${normalizedPath}`;
+    const authHeader: Record<string, string> = {};
+
+    if (requiresAuth && idToken) {
+      authHeader.Authorization = `Bearer ${idToken}`;
+    } else if (SUPABASE_ANON_KEY) {
+      authHeader.Authorization = `Bearer ${SUPABASE_ANON_KEY}`;
+    }
+
+    response = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
-        ...(requiresAuth && idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+        ...authHeader,
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -63,14 +76,15 @@ async function request<TResponse, TBody = unknown>(
 
 export const ApiService = {
   getStories(level?: string) {
-    const query = level ? `?level=${level}` : '';
-    return request(`/api/stories${query}`);
+    const query = level && level !== 'ALL' ? `?level=${level}` : '';
+    return request(`/stories${query}`);
   },
   getStoryById(id: string) {
-    return request(`/api/stories/${id}`);
+    return request(`/stories/${encodeURIComponent(id)}`);
   },
   getWordsByEpisode(episodeId: string) {
-    return request(`/api/words?episodeId=${episodeId}`);
+    const query = new URLSearchParams({ episodeId }).toString();
+    return request(`/words?${query}`);
   },
   saveEpisodeProgress(payload: {
     episodeId: string;
@@ -78,7 +92,7 @@ export const ApiService = {
     score: number;
     playPositionMs: number;
   }) {
-    return request('/api/progress/episode', { method: 'POST', body: payload, requiresAuth: true });
+    return request('/progress/episode', { method: 'POST', body: payload, requiresAuth: true });
   },
   saveWordProgress(payload: {
     wordId: string;
@@ -87,13 +101,13 @@ export const ApiService = {
     repetitions: number;
     correct: boolean;
   }) {
-    return request('/api/progress/word', { method: 'POST', body: payload, requiresAuth: true });
+    return request('/progress/word', { method: 'POST', body: payload, requiresAuth: true });
   },
   getReviewWords() {
-    return request('/api/progress/review', { requiresAuth: true });
+    return request('/progress/review', { requiresAuth: true });
   },
   createQuizAttempt(quizId: string) {
-    return request('/api/quiz/attempts', {
+    return request('/quiz/attempts', {
       method: 'POST',
       body: { quizId },
       requiresAuth: true,
@@ -106,7 +120,7 @@ export const ApiService = {
       score: number;
     },
   ) {
-    return request(`/api/quiz/attempts/${attemptId}/submit`, {
+    return request(`/quiz/attempts/${attemptId}/submit`, {
       method: 'POST',
       body: payload,
       requiresAuth: true,
@@ -118,13 +132,13 @@ export const ApiService = {
     durationMs: number;
     score: number;
   }) {
-    return request('/api/recordings', { method: 'POST', body: payload, requiresAuth: true });
+    return request('/recordings', { method: 'POST', body: payload, requiresAuth: true });
   },
-  get<TResponse>(path: string) {
-    return request<TResponse>(path);
+  get<TResponse>(path: string, options?: Omit<RequestOptions<unknown>, 'method' | 'body'>) {
+    return request<TResponse>(path, options);
   },
 };
 
-export { request };
+export { request, SUPABASE_ANON_KEY };
 
 

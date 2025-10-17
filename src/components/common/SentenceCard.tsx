@@ -7,6 +7,8 @@ export interface SentenceCardProps {
   jpText: string;
   koText?: string;
   isTarget?: boolean;
+  startMs?: number;
+  endMs?: number;
 }
 
 function SentenceCard({ order, jpText, koText, isTarget = false }: SentenceCardProps) {

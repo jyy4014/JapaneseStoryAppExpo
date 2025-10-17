@@ -6,9 +6,10 @@ export interface StorySummary {
   id: string;
   title: string;
   level: StoryLevel;
-  thumbnailUrl?: string;
   durationSeconds?: number;
   summary?: string;
+  thumbnailUrl?: string;
+  audioStoragePath?: string;
 }
 
 type StoryState = {
