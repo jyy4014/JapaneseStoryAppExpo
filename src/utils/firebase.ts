@@ -1,7 +1,6 @@
-const app = null;
-const auth = null;
-const isFirebaseConfigured = false;
+export const app = null;
+export const auth = null;
+export const isFirebaseConfigured = false;
 
-export { app, auth, isFirebaseConfigured };
 export default app;
 

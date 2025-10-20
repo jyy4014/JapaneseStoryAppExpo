@@ -7,10 +7,12 @@ import { colors } from '../../theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
-import { isFirebaseConfigured } from '../../hooks/useAuthActions';
+import useAuthActions from '../../hooks/useAuthActions';
+import { isFirebaseConfigured } from '../../utils/firebase';
 
 const AuthLandingScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  useAuthActions();
 
   return (
     <SafeAreaView style={styles.safeArea}>

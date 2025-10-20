@@ -68,7 +68,7 @@ function QuizScreen({ route, navigation }: Props) {
     navigation.setOptions({
       headerShown: true,
       headerTitle: '퀴즈',
-      headerBackTitleVisible: false,
+      headerBackVisible: true,
     });
   }, [navigation]);
 
@@ -78,7 +78,7 @@ function QuizScreen({ route, navigation }: Props) {
       setError(undefined);
       try {
         const response = await ApiService.getStoryById(episodeId);
-        const quizData = response?.quiz;
+        const quizData = (response as { quiz?: ApiQuizData | null })?.quiz;
         if (quizData) {
           setQuiz(mapApiQuiz(quizData));
         } else {

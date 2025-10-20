@@ -10,6 +10,7 @@ export const colors = {
   error: '#F87171',
   success: '#34D399',
   info: '#60A5FA',
+  surface: '#FFFFFF',
 } as const;
 
 export type ColorKey = keyof typeof colors;

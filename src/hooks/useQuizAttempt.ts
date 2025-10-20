@@ -104,7 +104,6 @@ export default function useQuizAttempt({ quiz }: UseQuizAttemptOptions) {
         responses,
         score: computedScore,
       });
-
       setScore(submission.score ?? computedScore);
       return submission;
     } catch (submitError) {

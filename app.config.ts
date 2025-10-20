@@ -12,7 +12,7 @@ const config: ExpoConfig = {
     resizeMode: 'contain',
     backgroundColor: '#ffffff',
   },
-  assets: ['./assets/fonts/'],
+  assetBundlePatterns: ['./assets/**/*'],
   extra: {
     apiBaseUrl:
       process.env.API_BASE_URL ?? 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api',

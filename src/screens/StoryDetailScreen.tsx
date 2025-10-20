@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import StyledButton from '../components/common/StyledButton';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import SentenceCard from '../components/common/SentenceCard';
 import Typography from '../components/common/Typography';
@@ -23,7 +24,7 @@ function StoryDetailScreen({ route, navigation }: Props) {
     navigation.setOptions({
       headerShown: true,
       headerTitle: detail?.title ?? '사연 상세',
-      headerBackTitleVisible: false,
+      headerBackVisible: true,
     });
   }, [detail?.title, navigation]);
 

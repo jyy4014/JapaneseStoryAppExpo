@@ -64,7 +64,7 @@ function StoryAudioPlayer({ title = '오디오', assets, storageBaseUrl }: Story
       return;
     }
 
-    const statusPromise = sound.setOnPlaybackStatusUpdate((status) => {
+    const subscription = sound.setOnPlaybackStatusUpdate((status) => {
       if (!status.isLoaded) {
         return;
       }
@@ -77,11 +77,7 @@ function StoryAudioPlayer({ title = '오디오', assets, storageBaseUrl }: Story
     });
 
     return () => {
-      statusPromise.then((subscription) => {
-        if (subscription) {
-          subscription.remove();
-        }
-      });
+      sound.setOnPlaybackStatusUpdate(null);
     };
   }, [sound]);
 

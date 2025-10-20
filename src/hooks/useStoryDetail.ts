@@ -150,7 +150,7 @@ export default function useStoryDetail(storyId: string | undefined) {
 
     try {
       const response = await ApiService.getStoryById(storyId);
-      setDetail(transformEpisodeDetail(response));
+      setDetail(transformEpisodeDetail(response as EpisodeDetailResponse));
     } catch (fetchError) {
       setError(
         fetchError instanceof Error ? fetchError.message : '사연 상세를 불러오는 데 실패했습니다.',

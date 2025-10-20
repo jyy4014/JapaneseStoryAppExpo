@@ -1,6 +1,9 @@
 import Constants from 'expo-constants';
 import useAuthStore from '../store/useAuthStore';
 import logger from '../utils/logger';
+import type { StorySummary } from '../store/useStoryStore';
+import type { EpisodeDetailResponse } from '../hooks/useStoryDetail';
+import type { QuizAttemptResponse, QuizSubmissionResponse } from '../types/quiz';
 
 const SUPABASE_FUNCTIONS_URL = Constants.expoConfig?.extra?.supabaseFunctionsUrl as string | undefined;
 const API_BASE_URL = SUPABASE_FUNCTIONS_URL
@@ -77,10 +80,10 @@ async function request<TResponse, TBody = unknown>(
 export const ApiService = {
   getStories(level?: string) {
     const query = level && level !== 'ALL' ? `?level=${level}` : '';
-    return request(`/stories${query}`);
+    return request<StorySummary[]>(`/stories${query}`);
   },
   getStoryById(id: string) {
-    return request(`/stories/${encodeURIComponent(id)}`);
+    return request<EpisodeDetailResponse>(`/stories/${encodeURIComponent(id)}`);
   },
   getWordsByEpisode(episodeId: string) {
     const query = new URLSearchParams({ episodeId }).toString();
@@ -107,7 +110,7 @@ export const ApiService = {
     return request('/progress/review', { requiresAuth: true });
   },
   createQuizAttempt(quizId: string) {
-    return request('/quiz/attempts', {
+    return request<QuizAttemptResponse>('/quiz/attempts', {
       method: 'POST',
       body: { quizId },
       requiresAuth: true,
@@ -120,7 +123,7 @@ export const ApiService = {
       score: number;
     },
   ) {
-    return request(`/quiz/attempts/${attemptId}/submit`, {
+    return request<QuizSubmissionResponse>(`/quiz/attempts/${attemptId}/submit`, {
       method: 'POST',
       body: payload,
       requiresAuth: true,
@@ -136,6 +139,13 @@ export const ApiService = {
   },
   get<TResponse>(path: string, options?: Omit<RequestOptions<unknown>, 'method' | 'body'>) {
     return request<TResponse>(path, options);
+  },
+  post<TResponse, TBody>(path: string, body: TBody, options?: Omit<RequestOptions<TBody>, 'method' | 'body'>) {
+    return request<TResponse, TBody>(path, {
+      ...options,
+      method: 'POST',
+      body,
+    });
   },
 };
 

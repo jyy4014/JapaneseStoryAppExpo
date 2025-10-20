@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import { clearStoredAuth, loadAuthTokens } from '../utils/storage';
 import logger from '../utils/logger';
+import { isFirebaseConfigured } from '../utils/firebase';
 
 export function useAuthBootstrap() {
   const { setTokens, clearTokens, setInitializing } = useAuthStore();
@@ -16,7 +17,9 @@ export function useAuthBootstrap() {
         setTokens(persisted);
       }
 
-      logger.warn('AuthActions', 'bootstrap:firebaseDisabled');
+      if (!isFirebaseConfigured) {
+        logger.warn('AuthActions', 'bootstrap:firebaseDisabled');
+      }
       setInitializing(false);
     };
 
@@ -56,4 +59,6 @@ export default function useAuthActions() {
     signOut: handleSignOut,
   };
 }
+
+export { isFirebaseConfigured };
 
