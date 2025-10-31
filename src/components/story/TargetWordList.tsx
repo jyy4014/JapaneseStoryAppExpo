@@ -1,62 +1,102 @@
 import React from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import Typography from '../common/Typography';
-import WordChip from '../common/WordChip';
 import { colors } from '../../theme/colors';
 
-export interface TargetWord {
+interface TargetWord {
   id: string;
   kanji?: string;
   kana?: string;
-  meaningKo: string;
+  meaningKo?: string;
+  jlptLevel?: string;
 }
 
 interface TargetWordListProps {
-  title?: string;
   words: TargetWord[];
 }
 
-function TargetWordList({ title = '학습 단어', words }: TargetWordListProps) {
+function WordChip({ word }: { word: TargetWord }) {
+  // word 객체 검증
+  if (!word || typeof word !== 'object') {
+    console.warn('[WordChip] Invalid word prop:', word);
+    return (
+      <View style={{
+        backgroundColor: colors.error,
+        borderRadius: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        margin: 4,
+      }}>
+        <Typography variant="caption" color={colors.white}>
+          단어 데이터 오류
+        </Typography>
+      </View>
+    );
+  }
+
+  const displayText = word.kanji
+    ? `${word.kanji} (${word.kana || ''})`
+    : word.kana || '단어 정보 없음';
+
+  const meaning = word.meaningKo || '의미 미등록';
+
   return (
-    <View style={styles.container}>
-      <Typography variant="subtitle" style={styles.heading}>
-        {title}
+    <View style={{
+      backgroundColor: colors.backgroundSecondary,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      margin: 4,
+      borderWidth: 1,
+      borderColor: colors.border,
+    }}>
+      <Typography variant="caption" style={{ fontWeight: '500' }}>
+        {displayText}
       </Typography>
-      <FlatList
-        data={words}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipList}
-        renderItem={({ item }) => (
-          <WordChip
-            label={item.kanji ?? item.kana ?? item.meaningKo}
-            color={colors.secondary}
-            textColor={colors.textPrimary}
-          />
-        )}
-        ListEmptyComponent={
-          <Typography variant="body" color={colors.textSecondary}>
-            등록된 학습 단어가 없습니다.
-          </Typography>
-        }
-      />
+      <Typography variant="small" color={colors.textSecondary} style={{ marginTop: 2 }}>
+        {meaning}
+      </Typography>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 24,
-  },
-  heading: {
-    marginBottom: 12,
-  },
-  chipList: {
-    gap: 12,
-    paddingRight: 20,
-  },
-});
+export default function TargetWordList({ words }: TargetWordListProps) {
+  // props 검증
+  if (!Array.isArray(words)) {
+    console.warn('[TargetWordList] Invalid words prop:', words);
+    return (
+      <View style={{ padding: 16 }}>
+        <Typography variant="body" color={colors.error}>
+          단어 데이터를 불러올 수 없습니다.
+        </Typography>
+      </View>
+    );
+  }
 
-export default TargetWordList;
+  if (words.length === 0) {
+    return (
+      <View style={{ padding: 16 }}>
+        <Typography variant="body" color={colors.textSecondary}>
+          타겟 단어가 없습니다.
+        </Typography>
+      </View>
+    );
+  }
 
+  return (
+    <View style={{ marginVertical: 16 }}>
+      <Typography variant="title" style={{ marginBottom: 12 }}>
+        🎯 타겟 단어
+      </Typography>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16 }}
+      >
+        {words.map((word) => (
+          <WordChip key={word.id} word={word} />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}

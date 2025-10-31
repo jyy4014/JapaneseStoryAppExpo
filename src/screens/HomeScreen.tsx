@@ -1,162 +1,265 @@
-import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  Platform,
+  ActivityIndicator
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+// 컴포넌트들
+import StoryCard from '../components/story/StoryCard';
 import Typography from '../components/common/Typography';
 import StyledButton from '../components/common/StyledButton';
-import StoryCard from '../components/common/StoryCard';
-import WordChip from '../components/common/WordChip';
-import useStoryStore from '../store/useStoryStore';
+
+// 스토어 & 서비스
+import { useStoryStore } from '../store/useStoryStore';
+import { StoryLevel } from '../services/api';
+
+// 타입 & 테마
+import { RootStackParamList } from '../navigation/AppNavigator';
 import { colors } from '../theme/colors';
-import { ApiService } from '../services/api';
-import type { RootStackParamList } from '../navigation/AppNavigator';
-import InfoBanner from '../components/common/InfoBanner';
-import useAuthStore from '../store/useAuthStore';
-import logger from '../utils/logger';
-import StoryHighlightCarousel from '../components/home/StoryHighlightCarousel';
 
-const levelFilters: Array<typeof useStoryStore.initialState.selectedLevel> = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-function HomeScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { idToken } = useAuthStore();
-  const stories = useStoryStore((state) => state.stories);
-  const selectedLevel = useStoryStore((state) => state.selectedLevel);
-  const isLoading = useStoryStore((state) => state.isLoading);
-  const error = useStoryStore((state) => state.error);
-  const setStories = useStoryStore((state) => state.setStories);
-  const setSelectedLevel = useStoryStore((state) => state.setSelectedLevel);
-  const setLoading = useStoryStore((state) => state.setLoading);
-  const setError = useStoryStore((state) => state.setError);
+const levelFilters: Array<StoryLevel | 'ALL'> = ['ALL', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
+function LevelFilterChip({
+  level,
+  isSelected,
+  onPress
+}: {
+  level: StoryLevel | 'ALL';
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  const getChipColor = () => {
+    if (level === 'ALL') return colors.primary;
+    return colors.jlpt[level as StoryLevel] || colors.primary;
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        backgroundColor: isSelected ? getChipColor() : colors.backgroundSecondary,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginHorizontal: 4,
+        borderWidth: isSelected ? 0 : 1,
+        borderColor: colors.border,
+      }}
+    >
+      <Typography
+        variant="caption"
+        color={isSelected ? colors.white : colors.text}
+        style={{ fontWeight: '600' }}
+      >
+        {level === 'ALL' ? '전체' : `JLPT ${level}`}
+      </Typography>
+    </TouchableOpacity>
+  );
+}
+
+export default function HomeScreen() {
+  const navigation = useNavigation<NavigationProp>();
+
+  // 스토어 상태
+  const {
+    stories,
+    selectedLevel,
+    isLoading,
+    error,
+    fetchStories,
+    setSelectedLevel
+  } = useStoryStore();
+
+  // 로컬 상태
+  const [refreshing, setRefreshing] = useState(false);
+
+  // 초기 데이터 로드
   useEffect(() => {
-    let cancelled = false;
-
-    const fetchStories = async () => {
-      logger.debug('HomeScreen', 'fetchStories:start', { selectedLevel });
-      setLoading(true);
-      setError(undefined);
-      try {
-        const response = await ApiService.getStories(selectedLevel === 'ALL' ? undefined : selectedLevel);
-        if (!cancelled) {
-          logger.debug('HomeScreen', 'fetchStories:success', { count: response.length });
-          setStories(response);
-        }
-      } catch (fetchError) {
-        if (!cancelled) {
-          logger.error('HomeScreen', 'fetchStories:error', fetchError);
-          setError(fetchError instanceof Error ? fetchError.message : '사연을 불러오지 못했습니다.');
-          setStories([]);
-        }
-      } finally {
-        if (!cancelled) {
-          logger.debug('HomeScreen', 'fetchStories:finished');
-          setLoading(false);
-        }
-      }
-    };
-
+    console.log('[HomeScreen] Component mounted, fetching stories...');
     fetchStories();
+  }, []);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedLevel, setError, setLoading, setStories]);
+  // 난이도 필터링 핸들러
+  const handleLevelFilter = async (level: StoryLevel | 'ALL') => {
+    console.log('[HomeScreen] Level filter changed:', level);
+    setSelectedLevel(level);
+    await fetchStories(level);
+  };
 
-  const filteredStories = useMemo(() => {
-    return stories;
-  }, [stories]);
+  // 스토리 클릭 핸들러
+  const handleStoryPress = (storyId: string) => {
+    try {
+      console.log('[HomeScreen] Story pressed:', storyId);
 
-  const highlightStories = filteredStories.slice(0, 5).map((story) => ({
-    id: story.id,
-    title: story.title,
-    summary: story.summary,
-    thumbnailUrl: story.thumbnailUrl,
-    onPress: () => navigation.navigate('StoryDetail', { storyId: story.id }),
-  }));
+      // 입력 검증
+      if (!storyId || typeof storyId !== 'string' || storyId.trim() === '') {
+        console.error('[HomeScreen] Invalid storyId:', storyId);
+        alert('유효한 스토리 ID가 아닙니다.');
+        return;
+      }
+
+      // 즉각적인 터치 피드백을 위해 약간의 지연
+      setTimeout(() => {
+        try {
+          if (Platform.OS === 'web') {
+            // 웹에서는 URL 변경 + state 업데이트
+            console.log('[HomeScreen] Web navigation: updating URL and navigating');
+
+            // window 객체 검증
+            if (typeof window === 'undefined' || !window.history) {
+              throw new Error('브라우저 환경이 올바르지 않습니다.');
+            }
+
+            window.history.pushState(null, '', `/story/${storyId}`);
+
+            // React Navigation을 통해 이동
+            if (navigation?.navigate) {
+              navigation.navigate('StoryDetail', { storyId: storyId.trim() });
+            } else {
+              throw new Error('네비게이션 객체가 유효하지 않습니다.');
+            }
+          } else {
+            // 네이티브에서는 React Navigation
+            if (navigation?.navigate) {
+              navigation.navigate('StoryDetail', { storyId: storyId.trim() });
+            } else {
+              throw new Error('네비게이션 객체가 유효하지 않습니다.');
+            }
+          }
+        } catch (navError) {
+          console.error('[HomeScreen] Navigation error:', navError);
+          alert('페이지 이동에 실패했습니다. 다시 시도해주세요.');
+        }
+      }, 100);
+    } catch (error) {
+      console.error('[HomeScreen] Story press error:', error);
+      alert('스토리 선택에 실패했습니다.');
+    }
+  };
+
+  // 새로고침 핸들러
+  const handleRefresh = async () => {
+    console.log('[HomeScreen] Refreshing...');
+    setRefreshing(true);
+    await fetchStories(selectedLevel);
+    setRefreshing(false);
+  };
+
+  // 필터링된 스토리 목록
+  const filteredStories = selectedLevel === 'ALL'
+    ? stories
+    : stories.filter(story => story.level === selectedLevel);
+
+  console.log('[HomeScreen] Render:', {
+    totalStories: stories.length,
+    filteredStories: filteredStories.length,
+    selectedLevel,
+    isLoading,
+    hasError: !!error
+  });
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* 헤더 */}
       <View style={styles.header}>
-        <Typography variant="title" color={colors.primary}>
+        <Typography variant="h1" style={styles.title}>
           사연으로 배우는 일본어
         </Typography>
-        <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
+        <Typography variant="subtitle" style={styles.subtitle}>
           스토리를 들으며 자연스럽게 단어를 학습해보세요.
         </Typography>
-        <View style={styles.actions}>
-          <StyledButton
-            title="난이도 선택"
-            onPress={() => navigation.navigate('LevelSelection')}
-          />
-          <StyledButton
-            title="학습 현황"
-            onPress={() => navigation.navigate(idToken ? 'ProgressDashboard' : 'AuthLanding')}
-            variant="secondary"
-          />
-        </View>
       </View>
 
-      {!idToken ? (
-        <InfoBanner
-          message="로그인하면 학습 현황과 복습 일정을 저장할 수 있어요."
-          variant="info"
-          style={styles.banner}
-        />
-      ) : null}
-
-      <StoryHighlightCarousel stories={highlightStories} />
-
+      {/* 난이도 필터 */}
       <View style={styles.levelFilterRow}>
-        <Typography variant="subtitle">학습 레벨</Typography>
-        <FlatList
-          data={levelFilters}
-          keyExtractor={(item) => item}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.levelChips}
-          renderItem={({ item }) => (
-            <WordChip
-              label={item}
-              color={item === selectedLevel ? colors.primary : colors.muted}
-              textColor={item === selectedLevel ? colors.white : colors.textPrimary}
-              onPress={() => setSelectedLevel(item)}
+        <Typography variant="title" style={styles.filterTitle}>
+          난이도 선택
+        </Typography>
+        <View style={styles.levelChips}>
+          {levelFilters.map((level) => (
+            <LevelFilterChip
+              key={level}
+              level={level}
+              isSelected={selectedLevel === level}
+              onPress={() => handleLevelFilter(level)}
             />
-          )}
-        />
+          ))}
+        </View>
       </View>
 
-      {isLoading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <FlatList
-          data={filteredStories}
-          keyExtractor={(story) => story.id}
-          contentContainerStyle={styles.storyList}
-          renderItem={({ item }) => (
-            <StoryCard
-              title={item.title}
-              summary={item.summary}
-              level={item.level}
-              durationSeconds={item.durationSeconds}
-              onPress={() => navigation.navigate('StoryDetail', { storyId: item.id })}
-            />
-          )}
-          ListEmptyComponent={
-            <Typography variant="body" color={colors.textSecondary} style={styles.emptyState}>
-              아직 준비된 사연이 없습니다.
-            </Typography>
-          }
-        />
-      )}
-
-      {!!error && (
-        <Typography variant="caption" color={colors.secondary} style={styles.errorText}>
-          {error}
+      {/* 학습 현황 배너 */}
+      <View style={styles.banner}>
+        <Typography variant="subtitle" style={styles.bannerTitle}>
+          학습 현황
         </Typography>
-      )}
+        <Typography variant="body" color={colors.textSecondary}>
+          로그인하면 학습 현황과 복습 일정을 저장할 수 있어요.
+        </Typography>
+      </View>
+
+      {/* 오늘의 추천 사연 헤더 */}
+      <View style={styles.recommendationHeader}>
+        <Typography variant="title" style={styles.recommendationTitle}>
+          오늘의 추천 사연
+        </Typography>
+        <Typography variant="caption" color={colors.textSecondary}>
+          새로운 스토리로 학습 동기를 얻어보세요
+        </Typography>
+      </View>
+
+      {/* 스토리 목록 */}
+      <FlatList
+        data={filteredStories}
+        keyExtractor={(story) => story.id}
+        contentContainerStyle={styles.storyList}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        renderItem={({ item }) => (
+          <StoryCard
+            id={item.id}
+            title={item.title}
+            summary={item.summary}
+            level={item.level}
+            durationSeconds={item.durationSeconds}
+            onPress={() => handleStoryPress(item.id)}
+          />
+        )}
+        ListEmptyComponent={
+          isLoading ? (
+            <View style={styles.loading}>
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginBottom: 16 }} />
+              <Typography variant="body" color={colors.textSecondary}>
+                스토리를 불러오는 중...
+              </Typography>
+              <Typography variant="caption" color={colors.textLight} style={{ marginTop: 8 }}>
+                잠시만 기다려주세요
+              </Typography>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Typography variant="body" color={colors.textSecondary} style={{ marginBottom: 16 }}>
+                {error || '아직 준비된 사연이 없습니다.'}
+              </Typography>
+              {error && (
+                <StyledButton
+                  title="다시 시도"
+                  onPress={() => fetchStories(selectedLevel)}
+                  style={styles.retryButton}
+                />
+              )}
+            </View>
+          )
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -165,48 +268,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 20,
   },
   header: {
-    marginTop: 24,
+    padding: 20,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: {
+    marginBottom: 8,
   },
   subtitle: {
-    marginTop: 8,
-  },
-  actions: {
-    marginTop: 16,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  banner: {
-    marginTop: 16,
+    color: colors.textSecondary,
   },
   levelFilterRow: {
-    marginTop: 24,
+    padding: 20,
+    backgroundColor: colors.white,
   },
-  levelChips: {
-    marginTop: 12,
-    gap: 8,
-    paddingRight: 20,
-  },
-  storyList: {
-    paddingTop: 16,
-    paddingBottom: 40,
-  },
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyState: {
-    textAlign: 'center',
-    paddingVertical: 40,
-  },
-  errorText: {
-    textAlign: 'center',
+  filterTitle: {
     marginBottom: 12,
   },
+  levelChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  banner: {
+    margin: 20,
+    padding: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+  },
+  bannerTitle: {
+    color: colors.white,
+    marginBottom: 4,
+  },
+  recommendationHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  recommendationTitle: {
+    marginBottom: 4,
+  },
+  storyList: {
+    paddingBottom: 40,
+  },
+  loading: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  empty: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  retryButton: {
+    marginTop: 16,
+  },
 });
-
-export default HomeScreen;
-

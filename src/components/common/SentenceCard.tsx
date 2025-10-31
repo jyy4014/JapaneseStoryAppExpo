@@ -1,77 +1,75 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { View, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
+import Typography from './Typography';
 import { colors } from '../../theme/colors';
 
-export interface SentenceCardProps {
+interface SentenceCardProps {
   order: number;
   jpText: string;
   koText?: string;
-  isTarget?: boolean;
-  startMs?: number;
-  endMs?: number;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
-function SentenceCard({ order, jpText, koText, isTarget = false }: SentenceCardProps) {
-  return (
-    <View style={[styles.container, isTarget && styles.targetBorder]}>
-      <View style={styles.orderBadge}>
-        <Text style={styles.orderText}>{order}</Text>
+export default function SentenceCard({
+  order,
+  jpText,
+  koText,
+  onPress,
+  style,
+}: SentenceCardProps) {
+  // props 검증
+  if (typeof order !== 'number' || order < 0) {
+    console.warn('[SentenceCard] Invalid order prop:', order);
+  }
+
+  if (!jpText || typeof jpText !== 'string') {
+    console.warn('[SentenceCard] Invalid jpText prop:', jpText);
+  }
+
+  const CardContent = () => (
+    <View style={[{ padding: 16, backgroundColor: colors.white, borderRadius: 8, marginVertical: 4 }, style]}>
+      {/* 순서 표시 */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <View style={{
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 8,
+        }}>
+          <Typography variant="caption" color={colors.white} style={{ fontWeight: 'bold' }}>
+            {typeof order === 'number' ? order : '?'}
+          </Typography>
+        </View>
+        <Typography variant="caption" color={colors.textSecondary}>
+          문장 {typeof order === 'number' ? order : '?'}
+        </Typography>
       </View>
-      <View style={styles.body}>
-        <Text style={[styles.jpText, isTarget && styles.highlight]}>{jpText}</Text>
-        {koText && <Text style={styles.koText}>{koText}</Text>}
-      </View>
+
+      {/* 일본어 텍스트 */}
+      <Typography variant="body" style={{ marginBottom: 8, fontWeight: '500' }}>
+        {jpText || '일본어 텍스트가 없습니다.'}
+      </Typography>
+
+      {/* 한국어 번역 */}
+      {koText && typeof koText === 'string' && koText.trim() && (
+        <Typography variant="caption" color={colors.textSecondary}>
+          {koText}
+        </Typography>
+      )}
     </View>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <CardContent />
+      </TouchableOpacity>
+    );
+  }
+
+  return <CardContent />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: colors.white,
-    shadowColor: colors.shadow,
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-    marginBottom: 12,
-  },
-  targetBorder: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  orderBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  orderText: {
-    color: colors.white,
-    fontWeight: '700',
-  },
-  body: {
-    flex: 1,
-  },
-  jpText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  koText: {
-    marginTop: 4,
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  highlight: {
-    color: colors.primary,
-  },
-});
-
-export default SentenceCard;
-
