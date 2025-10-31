@@ -1,0 +1,81 @@
+import type { Episode } from '../types/episode'
+
+export const mockEpisodes: Episode[] = [
+  {
+    id: 101,
+    title: '도쿄 아침 산책',
+    description: '시부야에서 시작하는 설레는 아침 루틴을 따라가요.',
+    duration_ms: 5 * 60 * 1000,
+    difficulty: 2,
+    genre: '라이프',
+    category: '일상회화',
+    audio_path: '',
+    audio_hash: '',
+    thumbnail_path: null,
+    published_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    sentences: [
+      {
+        id: 1,
+        episode_id: 101,
+        seq: 1,
+        start_ms: 0,
+        end_ms: 8000,
+        text: 'おはよう、渋谷の街が少し씩 깨어나고 있어요.',
+        created_at: new Date().toISOString(),
+      },
+    ],
+    progress: null,
+  },
+  {
+    id: 102,
+    title: '교토 전통 찻집에서',
+    description: '차 한 잔과 함께 듣는 사장님과의 짧은 대화.',
+    duration_ms: 7 * 60 * 1000,
+    difficulty: 3,
+    genre: '문화',
+    category: '여행회화',
+    audio_path: '',
+    audio_hash: '',
+    thumbnail_path: null,
+    published_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    sentences: [],
+    progress: null,
+  },
+  {
+    id: 103,
+    title: '애니메이션 스튜디오 견학',
+    description: '성우와 디렉터의 인터뷰를 통해 창작 비하인드를 들어요.',
+    duration_ms: 9 * 60 * 1000,
+    difficulty: 4,
+    genre: '인터뷰',
+    category: '전문회화',
+    audio_path: '',
+    audio_hash: '',
+    thumbnail_path: null,
+    published_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    sentences: [],
+    progress: {
+      user_id: 'debug-user',
+      episode_id: 103,
+      current_position_ms: 3 * 60 * 1000,
+      playback_rate: 1,
+      completed: false,
+      completed_at: null,
+      updated_at: new Date().toISOString(),
+    },
+  },
+]
+
+export const mockEpisodeStats = {
+  streakDays: 3,
+  weeklyMinutes: 42,
+  srsDue: 5,
+}
+
+
