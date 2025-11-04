@@ -189,3 +189,6 @@ export interface AchievementsResponse {
   unlocked_count: number
   total_count: number
 }
+
+
+

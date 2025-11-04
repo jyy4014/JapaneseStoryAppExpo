@@ -6,3 +6,6 @@ export interface BaseComponentProps {
 
 export type ComponentVariant<T extends string = string> = T
 
+
+
+

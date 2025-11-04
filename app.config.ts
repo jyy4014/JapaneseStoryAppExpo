@@ -47,9 +47,8 @@ const config: ExpoConfig = {
     output: 'single',
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-router'],
   experiments: {
-    typedRoutes: true,
+    baseUrl: process.env.EXPO_BASE_URL || '/JapaneseStoryAppExpo/',
   },
 };
 

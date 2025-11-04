@@ -46,3 +46,6 @@ export function formatDuration(totalSeconds: number): string {
 export function getTimeDifference(startMs: number, endMs: number): number {
   return Math.abs(endMs - startMs)
 }
+
+
+

@@ -171,3 +171,6 @@ export interface DailyWordsResponse {
   total: number
   completed_today: number
 }
+
+
+

@@ -16,3 +16,6 @@ export interface RouteParams {
   'word/[id]': { id: string }
 }
 
+
+
+
