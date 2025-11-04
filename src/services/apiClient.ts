@@ -18,12 +18,24 @@ const DEFAULT_HEADERS = {
 
 const DEFAULT_BASE_URL = 'http://127.0.0.1:54321/functions/v1/api'
 
+// Supabase anon key for mock auth
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw'
+
 const resolveBaseUrl = () => {
   return (
     process.env.EXPO_PUBLIC_API_BASE_URL ||
     process.env.API_BASE_URL ||
     DEFAULT_BASE_URL
   )
+}
+
+const getAuthHeaders = () => {
+  // 항상 anon key를 헤더에 포함 (테스트 및 개발용)
+  // 프로덕션에서는 실제 사용자 토큰으로 교체 필요
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  }
 }
 
 const buildUrl = (path: string, query?: RequestQuery) => {
@@ -63,6 +75,7 @@ export class ApiClient {
       credentials: 'include',
       headers: {
         ...DEFAULT_HEADERS,
+        ...getAuthHeaders(),
         ...(headers || {}),
       },
       ...rest,
@@ -104,4 +117,3 @@ export class ApiClient {
     return this.request<T>(path, { method: 'POST', body, query })
   }
 }
-
