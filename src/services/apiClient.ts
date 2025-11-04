@@ -16,7 +16,7 @@ const DEFAULT_HEADERS = {
   Accept: 'application/json',
 }
 
-const DEFAULT_BASE_URL = 'http://127.0.0.1:54321/functions/v1/api'
+const DEFAULT_BASE_URL = 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api'
 
 // Supabase anon key for mock auth
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw'
