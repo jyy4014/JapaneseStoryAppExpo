@@ -1,5 +1,1 @@
-import HomeScreen from '../src/screens/HomeScreen';
-
-export default function Index() {
-  return <HomeScreen />;
-}
+export { default } from '../src/app/(tabs)/index'

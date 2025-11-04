@@ -11,6 +11,13 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ title: '사연으로 배우는 일본어' }} />
           <Stack.Screen
+            name="episode/[id]"
+            options={{
+              title: '에피소드 상세',
+              presentation: 'card',
+            }}
+          />
+          <Stack.Screen
             name="story/[id]"
             options={{
               title: '스토리 상세',

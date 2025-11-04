@@ -1,25 +1,32 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, type TouchableOpacityProps } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import type { Episode } from '../../types/episode'
+import type { Episode } from '../../types/dto'
 import { lavenderPalette, radii, spacing, typography } from '../../constants/theme'
 
-interface EpisodeCardProps {
+interface EpisodeCardProps extends TouchableOpacityProps {
   episode: Episode
-  onPress: () => void
 }
 
 const difficultyLabels = ['입문', '초급', '초중급', '중급', '중상급']
 
-export function EpisodeCard({ episode, onPress }: EpisodeCardProps) {
-  const durationMinutes = Math.max(1, Math.round((episode.duration_ms ?? 0) / 60000))
+export function EpisodeCard({ episode, onPress, testID, ...touchableProps }: EpisodeCardProps) {
+  const durationSource = episode.durationMs ?? (episode.durationSeconds ? episode.durationSeconds * 1000 : 0)
+  const durationMinutes = durationSource ? Math.max(1, Math.round(durationSource / 60000)) : 0
   const difficultyIndex = Math.max(0, Math.min(4, (episode.difficulty ?? 1) - 1))
   const difficultyLabel = difficultyLabels[difficultyIndex]
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.88}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.88}
+      testID={testID ?? `episode-card-${episode.id}`}
+      accessibilityRole="button"
+      {...touchableProps}
+    >
       <View style={styles.thumbnailWrapper}>
-        {episode.thumbnail_path ? (
-          <Image source={{ uri: episode.thumbnail_path }} style={styles.thumbnail} resizeMode="cover" />
+        {episode.thumbnailPath ? (
+          <Image source={{ uri: episode.thumbnailPath }} style={styles.thumbnail} resizeMode="cover" />
         ) : (
           <View style={styles.thumbnailPlaceholder}>
             <Ionicons name="musical-notes" size={28} color={lavenderPalette.primaryDark} />
@@ -31,9 +38,9 @@ export function EpisodeCard({ episode, onPress }: EpisodeCardProps) {
         <Text style={styles.title} numberOfLines={2}>
           {episode.title}
         </Text>
-        {episode.description ? (
+        {episode.summary ? (
           <Text style={styles.description} numberOfLines={2}>
-            {episode.description}
+            {episode.summary}
           </Text>
         ) : null}
 
@@ -135,6 +142,3 @@ const styles = StyleSheet.create({
     color: lavenderPalette.textSecondary,
   },
 })
-
-
-

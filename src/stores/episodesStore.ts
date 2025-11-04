@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import type { Episode, EpisodeFilters } from '../types/episode'
-import { mockEpisodes } from '../mock/episodes'
+import type { Episode, EpisodeFilter as EpisodeFilters } from '../types/dto'
 
 interface EpisodesState {
   episodes: Episode[]
@@ -21,29 +20,28 @@ export const useEpisodesStore = create<EpisodesState>((set) => ({
     try {
       const { EpisodeService } = await import('../services/episodeService')
       const { data, error } = await EpisodeService.getEpisodes(filters)
+
       if (error) {
         console.error('Episode fetch failed', error)
         set({
-          error: '에피소드 데이터를 불러오지 못했습니다. 모의 데이터를 표시합니다.',
-          episodes: mockEpisodes,
+          error: '에피소드를 불러오지 못했어요. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.',
+          episodes: [],
           loading: false,
           lastUpdated: new Date().toISOString(),
         })
         return
       }
 
-      const resolvedEpisodes = (data ?? []).length > 0 ? data : mockEpisodes
-
       set({
-        episodes: resolvedEpisodes,
+        episodes: data || [],
         loading: false,
         lastUpdated: new Date().toISOString(),
       })
     } catch (error) {
       console.error('Episode service unavailable', error)
       set({
-        error: '에피소드 서비스를 불러올 수 없습니다. 모의 데이터를 표시합니다.',
-        episodes: mockEpisodes,
+        error: '에피소드를 불러오지 못했어요. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.',
+        episodes: [],
         loading: false,
         lastUpdated: new Date().toISOString(),
       })
@@ -53,5 +51,3 @@ export const useEpisodesStore = create<EpisodesState>((set) => ({
     await useEpisodesStore.getState().fetchEpisodes(filters)
   },
 }))
-
-

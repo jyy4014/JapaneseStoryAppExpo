@@ -29,7 +29,7 @@ export function EpisodeFilter({ selectedDifficulty, onDifficultyChange, onOpenFi
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>오늘 듣고 싶은 난이도는?</Text>
+        <Text style={styles.title}>오늘 들고 싶은 난이도는?</Text>
         <TouchableOpacity style={styles.filterButton} onPress={onOpenFilterSheet ?? (() => setExpanded((prev) => !prev))}>
           <Ionicons name="options" size={16} color={lavenderPalette.primaryDark} />
           <Text style={styles.filterButtonText}>필터</Text>
@@ -140,6 +140,3 @@ const styles = StyleSheet.create({
     color: lavenderPalette.primaryDark,
   },
 })
-
-
-

@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:19006';
+const localPreviewUrl = 'http://127.0.0.1:4174';
+const baseUrl = process.env.E2E_BASE_URL ?? localPreviewUrl;
+const shouldStartLocalServer = !process.env.E2E_BASE_URL;
 
 export default defineConfig({
   testDir: './tests',
@@ -22,5 +24,13 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
   ],
+  webServer: shouldStartLocalServer
+    ? {
+        command: 'npx serve -s dist -l 4174',
+        url: localPreviewUrl,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      }
+    : undefined,
 });
 

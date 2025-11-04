@@ -38,10 +38,12 @@ export const typography = {
     fontSize: 16,
     fontWeight: '400' as const,
   },
+  bodySmall: {
+    fontSize: 14,
+    fontWeight: '400' as const,
+  },
   caption: {
     fontSize: 12,
     fontWeight: '400' as const,
   },
 }
-
-

@@ -28,9 +28,7 @@ const resolvedMockFlag =
 export const debugAuthConfig = {
   useMockAuth: __DEV__ && resolvedMockFlag,
   mockUser: {
-    id: 'debug-user',
+    id: '00000000-0000-0000-0000-000000000000',
     email: extra.mockUserEmail ?? 'debug@example.com',
   },
 }
-
-
