@@ -536,6 +536,28 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
+  levelGroup: {
+    marginBottom: spacing.xl,
+  },
+  levelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  levelTitle: {
+    ...typography.h4,
+    fontSize: 18,
+    color: lavenderPalette.primaryDark,
+    fontWeight: '700',
+  },
+  levelCount: {
+    ...typography.body,
+    color: lavenderPalette.textSecondary,
+    fontSize: 14,
+  },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
