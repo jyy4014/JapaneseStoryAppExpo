@@ -37,6 +37,7 @@ export default function EpisodeDetailScreen() {
   const handleStartListening = useCallback(async () => {
     if (!episode) return
 
+    // 오디오를 미리 생성/확인
     const { data, error: audioError } = await EpisodeService.getOrGenerateAudio(episode.id)
 
     if (audioError || !data) {
@@ -44,9 +45,10 @@ export default function EpisodeDetailScreen() {
       return
     }
 
+    // 플레이어 페이지로 이동
     EventService.logPlayStart(episode.id, 0)
-    Alert.alert('재생 준비 완료', data.source === 'existing' ? '기존 오디오를 불러왔어요.' : 'TTS로 새로운 오디오를 만들었어요.')
-  }, [episode])
+    router.push(`/story/${episode.id}`)
+  }, [episode, router])
 
   const handleSaveForLater = useCallback(() => {
     if (!episode) return

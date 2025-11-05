@@ -34,6 +34,10 @@ export const typography = {
     fontSize: 20,
     fontWeight: '600' as const,
   },
+  h3: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+  },
   body: {
     fontSize: 16,
     fontWeight: '400' as const,
@@ -41,6 +45,10 @@ export const typography = {
   bodySmall: {
     fontSize: 14,
     fontWeight: '400' as const,
+  },
+  button: {
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
   caption: {
     fontSize: 12,
