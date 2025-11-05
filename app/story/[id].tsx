@@ -24,6 +24,8 @@ export default function StoryPlayerScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
+  console.log('StoryPlayerScreen loaded with id:', id)
+  
   const { currentTime } = usePlayerStore()
   const scrollViewRef = useRef<ScrollView>(null)
 
