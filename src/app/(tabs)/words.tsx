@@ -85,7 +85,8 @@ export default function WordbookScreen() {
         throw new Error(`단어장 목록 조회 실패: ${wordsRes.status}`)
       }
       const wordsData = await wordsRes.json()
-      setWords(wordsData.words || [])
+      const wordsList = wordsData.words || []
+      setWords(wordsList)
 
       // 통계 조회
       const statsRes = await fetch(
@@ -93,14 +94,25 @@ export default function WordbookScreen() {
         { headers }
       )
       if (!statsRes.ok) {
-        throw new Error(`통계 조회 실패: ${statsRes.status}`)
+        const errorText = await statsRes.text()
+        console.error('통계 조회 실패:', statsRes.status, errorText)
+        // 통계 조회 실패 시 단어 목록 개수로 대체
+        const masteredCount = wordsList.filter((w: any) => (w.level || 0) >= 4).length
+        const totalCorrect = wordsList.reduce((sum: number, w: any) => sum + (w.correctCount || 0), 0)
+        setStats({
+          totalWords: wordsList.length,
+          masteredWords: masteredCount,
+          totalCorrect,
+        })
+      } else {
+        const statsData = await statsRes.json()
+        console.log('통계 데이터:', statsData)
+        setStats({
+          totalWords: statsData.totalWords ?? wordsList.length,
+          masteredWords: statsData.masteredWords ?? 0,
+          totalCorrect: statsData.totalCorrect ?? 0,
+        })
       }
-      const statsData = await statsRes.json()
-      setStats({
-        totalWords: statsData.totalWords || 0,
-        masteredWords: statsData.masteredWords || 0,
-        totalCorrect: statsData.totalCorrect || 0,
-      })
     } catch (err) {
       console.error('Failed to load wordbook data:', err)
       setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.')
