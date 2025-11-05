@@ -1,5 +1,5 @@
-import { useCallback, useMemo } from 'react'
-import { Alert, ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useCallback, useMemo, useState } from 'react'
+import { Alert, ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { lavenderPalette, spacing, typography } from '../../constants/theme'
@@ -17,6 +17,8 @@ export default function EpisodeDetailScreen() {
   const { user } = useAuthStore()
 
   const { episode, loading, error, refresh } = useEpisodeData(id)
+  const [preparingAudio, setPreparingAudio] = useState(false)
+  const [audioError, setAudioError] = useState<string | null>(null)
 
   const difficultyLabel = useMemo(() => {
     if (!episode?.difficulty) return '입문'
@@ -34,12 +36,41 @@ export default function EpisodeDetailScreen() {
     router.back()
   }, [router])
 
-  const handleStartListening = useCallback(() => {
+  const handleStartListening = useCallback(async () => {
     if (!episode) return
 
-    // 플레이어 페이지로 이동 (오디오 로드는 플레이어 페이지에서 처리)
-    // EventService.logPlayStart(episode.id, 0) // TODO: Edge Functions를 통한 이벤트 로깅
-    router.push(`/story/${episode.id}`)
+    try {
+      setPreparingAudio(true)
+      setAudioError(null)
+
+      console.log('[EpisodeDetail] Preparing audio for episode:', episode.id)
+
+      // 오디오 생성/로드 (3-5초 소요 가능)
+      const { data, error } = await EpisodeService.getOrGenerateAudio(episode.id)
+
+      if (error) {
+        console.error('[EpisodeDetail] Audio preparation failed:', error)
+        setAudioError(error.message ?? '오디오 준비에 실패했어요.')
+        return
+      }
+
+      if (!data?.audioUrl) {
+        console.error('[EpisodeDetail] No audio URL returned')
+        setAudioError('오디오를 불러올 수 없어요.')
+        return
+      }
+
+      console.log('[EpisodeDetail] Audio ready, navigating to player')
+
+      // 오디오 준비 완료 → 플레이어로 이동
+      // EventService.logPlayStart(episode.id, 0) // TODO: Edge Functions를 통한 이벤트 로깅
+      router.push(`/story/${episode.id}`)
+    } catch (err) {
+      console.error('[EpisodeDetail] Unexpected error:', err)
+      setAudioError('예상치 못한 오류가 발생했어요.')
+    } finally {
+      setPreparingAudio(false)
+    }
   }, [episode, router])
 
   const handleSaveForLater = useCallback(() => {
@@ -114,7 +145,7 @@ export default function EpisodeDetailScreen() {
       </ScrollView>
 
       <View style={styles.ctaBar}>
-        <TouchableOpacity style={styles.primaryCta} onPress={handleStartListening}>
+        <TouchableOpacity style={styles.primaryCta} onPress={handleStartListening} disabled={preparingAudio}>
           <Ionicons name="play" size={20} color={lavenderPalette.surface} />
           <Text style={styles.primaryCtaText}>듣기 시작</Text>
         </TouchableOpacity>
@@ -123,6 +154,37 @@ export default function EpisodeDetailScreen() {
           <Text style={styles.secondaryCtaText}>나중에 듣기</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 오디오 준비 중 로딩 모달 */}
+      <Modal visible={preparingAudio} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color={lavenderPalette.primaryDark} />
+            <Text style={styles.modalTitle}>오디오 준비 중</Text>
+            <Text style={styles.modalDescription}>처음 재생하는 에피소드는 오디오 생성에 3~5초가 소요돼요.</Text>
+            <Text style={styles.modalHint}>잠시만 기다려 주세요! ☕️</Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 오디오 준비 실패 Alert */}
+      <Modal visible={!!audioError} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Ionicons name="alert-circle-outline" size={48} color={lavenderPalette.error ?? '#E53E3E'} />
+            <Text style={styles.modalTitle}>오디오 준비 실패</Text>
+            <Text style={styles.modalDescription}>{audioError}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setAudioError(null)
+              }}
+            >
+              <Text style={styles.modalButtonText}>확인</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -274,6 +336,55 @@ const styles = StyleSheet.create({
     borderRadius: spacing.md,
   },
   backButtonText: {
+    color: lavenderPalette.surface,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: lavenderPalette.surface,
+    borderRadius: spacing.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.md,
+    minWidth: 280,
+    maxWidth: 360,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalTitle: {
+    ...typography.h3,
+    color: lavenderPalette.text,
+    marginTop: spacing.sm,
+  },
+  modalDescription: {
+    ...typography.body,
+    color: lavenderPalette.textSecondary,
+    textAlign: 'center',
+  },
+  modalHint: {
+    ...typography.body,
+    color: lavenderPalette.primary,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  modalButton: {
+    backgroundColor: lavenderPalette.primaryDark,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: spacing.md,
+    marginTop: spacing.sm,
+  },
+  modalButtonText: {
+    ...typography.body,
     color: lavenderPalette.surface,
     fontWeight: '600',
   },
