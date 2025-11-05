@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -29,9 +30,12 @@ export default function WordbookScreen() {
   })
   const [activeTab, setActiveTab] = useState<'all' | 'by-level'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchInput, setSearchInput] = useState('') // 검색 입력값 (debounce 전)
+  const [wordsByLevel, setWordsByLevel] = useState<{ [level: number]: any[] }>({})
   const [reviewWords, setReviewWords] = useState<ReviewWord[]>([])
   const [reviewVisible, setReviewVisible] = useState(false)
   const [loadingReview, setLoadingReview] = useState(false)
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
   // 사용자 초기화 - 실제 DB 사용자 ID 사용
   useEffect(() => {
@@ -41,6 +45,23 @@ export default function WordbookScreen() {
       setUser({ id: 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' })
     }
   }, [user, setUser])
+
+  // 검색 입력 debounce (300ms)
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput)
+    }, 300)
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+      }
+    }
+  }, [searchInput])
 
   useEffect(() => {
     if (user?.id) {
@@ -91,6 +112,17 @@ export default function WordbookScreen() {
       const wordsData = await wordsRes.json()
       const wordsList = wordsData.words || []
       setWords(wordsList)
+
+      // 레벨별 그룹화
+      const groupedByLevel: { [level: number]: any[] } = {}
+      wordsList.forEach((word: any) => {
+        const level = word.level || 0
+        if (!groupedByLevel[level]) {
+          groupedByLevel[level] = []
+        }
+        groupedByLevel[level].push(word)
+      })
+      setWordsByLevel(groupedByLevel)
 
       // 통계 조회
       const statsRes = await fetch(
@@ -252,45 +284,102 @@ export default function WordbookScreen() {
 
         {/* 검색 바 (전체 단어 탭일 때만) */}
         {activeTab === 'all' && (
-          <TouchableOpacity
-            style={styles.searchContainer}
-            onPress={() => {
-              // TODO: 검색 입력 모달 또는 화면으로 이동
-              console.log('Search')
-            }}
-          >
+          <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color={lavenderPalette.textSecondary} />
-            <Text style={styles.searchPlaceholder}>단어 검색...</Text>
-          </TouchableOpacity>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="단어 검색..."
+              placeholderTextColor={lavenderPalette.textSecondary}
+              value={searchInput}
+              onChangeText={setSearchInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {searchInput.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchInput('')
+                  setSearchQuery('')
+                }}
+                style={styles.searchClearButton}
+              >
+                <Ionicons name="close-circle" size={20} color={lavenderPalette.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
         )}
 
         {/* 단어 목록 */}
         <View style={styles.wordListContainer}>
-          {words.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="book-outline" size={48} color={lavenderPalette.textSecondary} />
-              <Text style={styles.emptyText}>저장한 단어가 없습니다.</Text>
-              <Text style={styles.emptySubtext}>
-                플레이어에서 단어를 클릭하여 저장해보세요!
-              </Text>
-            </View>
-          ) : (
-            words.map((word) => (
-              <TouchableOpacity key={word.id} style={styles.wordCard}>
-                <View style={styles.wordCardHeader}>
-                  <Text style={styles.wordKanji}>{word.kanji || word.meaningKo}</Text>
-                  <View style={styles.wordMeta}>
-                    <Text style={styles.wordLevel}>Level {word.level || 0}</Text>
-                    {word.jlptLevel && (
-                      <Text style={styles.wordJlpt}>{word.jlptLevel}</Text>
-                    )}
+          {activeTab === 'all' ? (
+            // 전체 단어 탭
+            words.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="book-outline" size={48} color={lavenderPalette.textSecondary} />
+                <Text style={styles.emptyText}>저장한 단어가 없습니다.</Text>
+                <Text style={styles.emptySubtext}>
+                  플레이어에서 단어를 클릭하여 저장해보세요!
+                </Text>
+              </View>
+            ) : (
+              words.map((word) => (
+                <TouchableOpacity key={word.id} style={styles.wordCard}>
+                  <View style={styles.wordCardHeader}>
+                    <Text style={styles.wordKanji}>{word.kanji || word.meaningKo}</Text>
+                    <View style={styles.wordMeta}>
+                      <Text style={styles.wordLevel}>Level {word.level || 0}</Text>
+                      {word.jlptLevel && (
+                        <Text style={styles.wordJlpt}>{word.jlptLevel}</Text>
+                      )}
+                    </View>
                   </View>
-                </View>
-                {word.kana && <Text style={styles.wordKana}>{word.kana}</Text>}
-                {word.romaji && <Text style={styles.wordRomaji}>{word.romaji}</Text>}
-                <Text style={styles.wordMeaning}>{word.meaningKo}</Text>
-              </TouchableOpacity>
-            ))
+                  {word.kana && <Text style={styles.wordKana}>{word.kana}</Text>}
+                  {word.romaji && <Text style={styles.wordRomaji}>{word.romaji}</Text>}
+                  <Text style={styles.wordMeaning}>{word.meaningKo}</Text>
+                </TouchableOpacity>
+              ))
+            )
+          ) : (
+            // 레벨별 탭
+            Object.keys(wordsByLevel).length === 0 ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="book-outline" size={48} color={lavenderPalette.textSecondary} />
+                <Text style={styles.emptyText}>저장한 단어가 없습니다.</Text>
+                <Text style={styles.emptySubtext}>
+                  플레이어에서 단어를 클릭하여 저장해보세요!
+                </Text>
+              </View>
+            ) : (
+              Object.keys(wordsByLevel)
+                .sort((a, b) => Number(a) - Number(b))
+                .map((levelStr) => {
+                  const level = Number(levelStr)
+                  const levelWords = wordsByLevel[level]
+                  return (
+                    <View key={level} style={styles.levelGroup}>
+                      <View style={styles.levelHeader}>
+                        <Text style={styles.levelTitle}>Level {level}</Text>
+                        <Text style={styles.levelCount}>{levelWords.length}개</Text>
+                      </View>
+                      {levelWords.map((word) => (
+                        <TouchableOpacity key={word.id} style={styles.wordCard}>
+                          <View style={styles.wordCardHeader}>
+                            <Text style={styles.wordKanji}>{word.kanji || word.meaningKo}</Text>
+                            <View style={styles.wordMeta}>
+                              {word.jlptLevel && (
+                                <Text style={styles.wordJlpt}>{word.jlptLevel}</Text>
+                              )}
+                            </View>
+                          </View>
+                          {word.kana && <Text style={styles.wordKana}>{word.kana}</Text>}
+                          {word.romaji && <Text style={styles.wordRomaji}>{word.romaji}</Text>}
+                          <Text style={styles.wordMeaning}>{word.meaningKo}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )
+                })
+            )
           )}
         </View>
 
@@ -432,10 +521,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     gap: spacing.sm,
   },
-  searchPlaceholder: {
-    ...typography.body,
-    color: lavenderPalette.textSecondary,
+  searchInput: {
     flex: 1,
+    ...typography.body,
+    color: lavenderPalette.text,
+    fontSize: 16,
+    padding: 0,
+  },
+  searchClearButton: {
+    padding: spacing.xs,
   },
   wordListContainer: {
     paddingHorizontal: spacing.lg,
