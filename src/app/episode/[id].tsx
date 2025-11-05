@@ -7,7 +7,7 @@ import { SectionBlock } from '../../components/common/SectionBlock'
 import { SentenceCard } from '../../components/common/SentenceCard'
 import { GuideItem } from '../../components/common/GuideItem'
 import { EpisodeService } from '../../services/episodeService'
-import { EventService } from '../../services/eventService'
+// import { EventService } from '../../services/eventService' // TODO: Edge Functions를 통한 이벤트 로깅으로 변경 필요
 import { useEpisodeData } from '../../hooks/useEpisodeData'
 import { useAuthStore } from '../../stores/authStore'
 
@@ -46,13 +46,13 @@ export default function EpisodeDetailScreen() {
     }
 
     // 플레이어 페이지로 이동
-    EventService.logPlayStart(episode.id, 0)
+    // EventService.logPlayStart(episode.id, 0) // TODO: Edge Functions를 통한 이벤트 로깅
     router.push(`/story/${episode.id}`)
   }, [episode, router])
 
   const handleSaveForLater = useCallback(() => {
     if (!episode) return
-    EventService.logEvent('episode_save_for_later', { episode_id: episode.id, user_id: user?.id }, episode.id)
+    // EventService.logEvent('episode_save_for_later', { episode_id: episode.id, user_id: user?.id }, episode.id) // TODO: Edge Functions
     Alert.alert('저장 완료', '나중에 듣기 목록에 추가했어요.')
   }, [episode, user?.id])
 
