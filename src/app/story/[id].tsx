@@ -14,6 +14,8 @@ import { lavenderPalette, spacing, typography } from '../../constants/theme'
 import { AudioPlayer } from '../../components/player/AudioPlayer'
 import { EpisodeService } from '../../services/episodeService'
 import { usePlayerStore } from '../../stores/playerStore'
+import { WordBottomSheet } from '../../components/words/WordBottomSheet'
+import { parseScript, renderParsedScript } from '../../utils/parseScript'
 import type { Episode, Sentence } from '../../types/dto/episode'
 
 export default function StoryPlayerScreen() {
@@ -23,6 +25,10 @@ export default function StoryPlayerScreen() {
   const [episode, setEpisode] = useState<Episode | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // 단어 Bottom Sheet 상태
+  const [selectedWordId, setSelectedWordId] = useState<string | null>(null)
+  const [wordSheetVisible, setWordSheetVisible] = useState(false)
   
   console.log('StoryPlayerScreen loaded with id:', id)
   
@@ -140,6 +146,9 @@ export default function StoryPlayerScreen() {
           episode.sentences.map((sentence: Sentence, index: number) => {
             const isActive = index === currentSentenceIndex
             
+            // Script 파싱
+            const parsedSegments = sentence.text ? parseScript(sentence.text) : []
+            
             return (
               <View
                 key={sentence.id}
@@ -149,7 +158,16 @@ export default function StoryPlayerScreen() {
                 ]}
               >
                 <Text style={[styles.sentenceJapanese, isActive && styles.sentenceActiveText]}>
-                  {sentence.text}
+                  {renderParsedScript(
+                    parsedSegments,
+                    (wordId, wordText) => {
+                      console.log('Word clicked:', wordId, wordText)
+                      setSelectedWordId(wordId)
+                      setWordSheetVisible(true)
+                    },
+                    styles.sentenceJapanese,
+                    styles.wordHighlight
+                  )}
                 </Text>
               </View>
             )
@@ -163,6 +181,37 @@ export default function StoryPlayerScreen() {
 
       {/* Audio Player */}
       {id && <AudioPlayer episodeId={id} />}
+      
+      {/* Word Bottom Sheet */}
+      <WordBottomSheet
+        visible={wordSheetVisible}
+        wordId={selectedWordId}
+        onClose={() => {
+          setWordSheetVisible(false)
+          setSelectedWordId(null)
+        }}
+        onSave={async (wordId) => {
+          // TODO: userId 가져오기 (authStore에서)
+          console.log('Saving word:', wordId)
+          
+          const response = await fetch(
+            `https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api/words/${wordId}/save`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
+              },
+              body: JSON.stringify({ userId: 'test-user-id' }) // TODO: 실제 userId 사용
+            }
+          )
+          
+          if (!response.ok) {
+            throw new Error('Failed to save word')
+          }
+        }}
+      />
     </SafeAreaView>
   )
 }
@@ -262,6 +311,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: lavenderPalette.text,
     lineHeight: 28,
+  },
+  wordHighlight: {
+    color: lavenderPalette.primary,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+    textDecorationColor: lavenderPalette.primary,
   },
   sentenceKorean: {
     fontSize: 15,
