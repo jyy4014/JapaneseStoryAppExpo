@@ -1,51 +1,28 @@
-import { createClient } from '@supabase/supabase-js'
+/**
+ * ⚠️ 프론트엔드에서는 Supabase를 직접 사용하지 않습니다!
+ * 모든 DB 연동은 Edge Functions(서버)를 통해서만 처리합니다.
+ * 
+ * 이 파일은 레거시 코드(eventService, authService, wordService)에서
+ * import되는 것을 막기 위한 더미 파일입니다.
+ */
 
-const supabaseUrl =
-  process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL ||
-  'https://placeholder.supabase.co' // 개발 환경 fallback
+console.warn('⚠️ supabase.ts: 프론트엔드에서 Supabase 직접 접근은 권장되지 않습니다. Edge Functions를 사용하세요.')
 
-const supabaseAnonKey =
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  'placeholder-anon-key' // 개발 환경 fallback
-
-// 환경 변수가 없으면 경고만 출력
-if ((!process.env.EXPO_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) ||
-    (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY && !process.env.SUPABASE_ANON_KEY)) {
-  console.warn('⚠️ Supabase 환경 변수가 설정되지 않았습니다. API 요청이 실패할 수 있습니다.')
-  console.warn('로컬 개발: .env 파일에 EXPO_PUBLIC_SUPABASE_URL과 EXPO_PUBLIC_SUPABASE_ANON_KEY를 추가하세요.')
-}
-
-const isDevelopment = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production'
-const isWeb = typeof window !== 'undefined'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// 더미 Supabase 클라이언트 (에러 방지용)
+export const supabase = {
+  from: () => ({
+    select: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+    insert: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+    update: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+    delete: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+  }),
   auth: {
-    autoRefreshToken: !isDevelopment,
-    persistSession: false,
-    detectSessionInUrl: false,
+    signUp: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+    signInWithPassword: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+    signOut: () => Promise.resolve({ error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
   },
-  global: {
-    headers: {
-      'X-Client-Info': 'japanese-story-app@1.0.0',
-    },
-    fetch: (url: RequestInfo | URL, options: RequestInit = {}) => {
-      if (isDevelopment && isWeb) {
-        return fetch(url, {
-          ...options,
-          credentials: 'omit',
-          headers: {
-            ...options.headers,
-            apikey: supabaseAnonKey,
-            Authorization: `Bearer ${supabaseAnonKey}`,
-          },
-        })
-      }
-      return fetch(url, options)
-    },
-  },
-})
+} as any
 
 // 타입 정의들
 export interface Database {
