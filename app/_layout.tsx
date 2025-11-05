@@ -9,7 +9,7 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar style="auto" />
         <Stack>
-          <Stack.Screen name="index" options={{ title: '사연으로 배우는 일본어' }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="episode/[id]"
             options={{
