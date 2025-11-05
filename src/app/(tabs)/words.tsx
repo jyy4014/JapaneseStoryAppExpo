@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { lavenderPalette, spacing, typography } from '../../constants/theme'
 import { useAuthStore } from '../../stores/authStore'
 import { debugAuthConfig } from '../../config/debug'
+import { FlashcardReview, type ReviewWord } from '../../components/wordbook/FlashcardReview'
 
 export default function WordbookScreen() {
   const router = useRouter()
@@ -28,6 +29,9 @@ export default function WordbookScreen() {
   })
   const [activeTab, setActiveTab] = useState<'all' | 'by-level'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [reviewWords, setReviewWords] = useState<ReviewWord[]>([])
+  const [reviewVisible, setReviewVisible] = useState(false)
+  const [loadingReview, setLoadingReview] = useState(false)
 
   // 사용자 초기화 - 실제 DB 사용자 ID 사용
   useEffect(() => {
@@ -121,9 +125,52 @@ export default function WordbookScreen() {
     }
   }
 
-  const handleStartReview = () => {
-    // TODO: 플래시카드 복습 화면으로 이동
-    console.log('Start review')
+  const handleStartReview = async () => {
+    if (!user?.id) return
+
+    try {
+      setLoadingReview(true)
+
+      const baseUrl = 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api'
+      const headers = {
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
+      }
+
+      // 복습할 단어 목록 조회
+      const reviewRes = await fetch(`${baseUrl}/wordbook/review?userId=${user.id}&limit=20`, {
+        headers,
+      })
+
+      if (!reviewRes.ok) {
+        throw new Error(`복습 단어 조회 실패: ${reviewRes.status}`)
+      }
+
+      const reviewData = await reviewRes.json()
+      const words = reviewData.words || []
+
+      if (words.length === 0) {
+        // 복습할 단어가 없음
+        console.log('복습할 단어가 없습니다')
+        return
+      }
+
+      setReviewWords(words)
+      setReviewVisible(true)
+    } catch (error) {
+      console.error('Failed to load review words:', error)
+    } finally {
+      setLoadingReview(false)
+    }
+  }
+
+  const handleReviewComplete = (results: { correct: number; wrong: number }) => {
+    console.log('Review completed:', results)
+    // 복습 완료 후 데이터 새로고침
+    if (user?.id) {
+      loadWordbookData()
+    }
   }
 
   if (loading) {
@@ -158,22 +205,28 @@ export default function WordbookScreen() {
         <TouchableOpacity
           style={[
             styles.reviewCard,
-            reviewCount === 0 && styles.reviewCardDisabled,
+            (reviewCount === 0 || loadingReview) && styles.reviewCardDisabled,
           ]}
           onPress={handleStartReview}
-          disabled={reviewCount === 0}
+          disabled={reviewCount === 0 || loadingReview}
         >
-          <Ionicons
-            name="book"
-            size={32}
-            color={reviewCount === 0 ? lavenderPalette.textSecondary : lavenderPalette.surface}
-          />
-          <Text style={styles.reviewCardTitle}>오늘 복습할 단어</Text>
-          <Text style={styles.reviewCardCount}>
-            {reviewCount === 0 ? '모든 단어를 복습했어요! 🎉' : `${reviewCount}개`}
-          </Text>
-          {reviewCount > 0 && (
-            <Text style={styles.reviewCardButton}>복습 시작하기</Text>
+          {loadingReview ? (
+            <ActivityIndicator size="large" color={lavenderPalette.surface} />
+          ) : (
+            <>
+              <Ionicons
+                name="book"
+                size={32}
+                color={reviewCount === 0 ? lavenderPalette.textSecondary : lavenderPalette.surface}
+              />
+              <Text style={styles.reviewCardTitle}>오늘 복습할 단어</Text>
+              <Text style={styles.reviewCardCount}>
+                {reviewCount === 0 ? '모든 단어를 복습했어요! 🎉' : `${reviewCount}개`}
+              </Text>
+              {reviewCount > 0 && (
+                <Text style={styles.reviewCardButton}>복습 시작하기</Text>
+              )}
+            </>
           )}
         </TouchableOpacity>
 
@@ -257,6 +310,17 @@ export default function WordbookScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* 플래시카드 복습 모달 */}
+      <FlashcardReview
+        visible={reviewVisible}
+        words={reviewWords}
+        onClose={() => {
+          setReviewVisible(false)
+          setReviewWords([])
+        }}
+        onComplete={handleReviewComplete}
+      />
     </SafeAreaView>
   )
 }
