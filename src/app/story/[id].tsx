@@ -6,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity, 
   ActivityIndicator,
-  SafeAreaView 
+  SafeAreaView,
+  Dimensions
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -17,6 +18,8 @@ import { usePlayerStore } from '../../stores/playerStore'
 import { WordBottomSheet } from '../../components/words/WordBottomSheet'
 import { parseScript, renderParsedScript } from '../../utils/parseScript'
 import type { Episode, Sentence } from '../../types/dto/episode'
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 export default function StoryPlayerScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>()
@@ -34,6 +37,8 @@ export default function StoryPlayerScreen() {
   
   const { currentTime } = usePlayerStore()
   const scrollViewRef = useRef<ScrollView>(null)
+  const sentenceRefs = useRef<{ [key: number]: View | null }>({})
+  const [sentenceLayouts, setSentenceLayouts] = useState<{ [key: number]: { y: number; height: number } }>({})
 
   // 에피소드 로드
   useEffect(() => {
@@ -83,13 +88,27 @@ export default function StoryPlayerScreen() {
 
   const currentSentenceIndex = getCurrentSentenceIndex()
 
-  // 현재 문장으로 스크롤
+  // 현재 문장으로 스크롤 (중앙 정렬)
   useEffect(() => {
-    if (currentSentenceIndex >= 0 && scrollViewRef.current) {
-      // Auto-scroll to current sentence (optional)
-      // scrollViewRef.current.scrollTo({ y: currentSentenceIndex * 100, animated: true })
+    if (currentSentenceIndex >= 0 && scrollViewRef.current && sentenceLayouts[currentSentenceIndex]) {
+      const layout = sentenceLayouts[currentSentenceIndex]
+      const scrollY = layout.y - (SCREEN_HEIGHT / 2) + (layout.height / 2)
+      
+      scrollViewRef.current.scrollTo({
+        y: Math.max(0, scrollY),
+        animated: true,
+      })
     }
-  }, [currentSentenceIndex])
+  }, [currentSentenceIndex, sentenceLayouts])
+
+  // 문장 레이아웃 측정
+  const handleSentenceLayout = (index: number, event: any) => {
+    const { y, height } = event.nativeEvent.layout
+    setSentenceLayouts((prev) => ({
+      ...prev,
+      [index]: { y, height },
+    }))
+  }
 
   if (loading) {
     return (
@@ -131,20 +150,41 @@ export default function StoryPlayerScreen() {
             Lv.{episode.level} • {episode.category}
           </Text>
         </View>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="ellipsis-horizontal" size={24} color={lavenderPalette.text} />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          {/* 재생 속도 아이콘 */}
+          <TouchableOpacity style={styles.headerIconButton} onPress={() => {
+            // TODO: 재생 속도 선택 모달 표시
+            console.log('Playback speed')
+          }}>
+            <Text style={styles.headerIconText}>{playbackRate}x</Text>
+          </TouchableOpacity>
+          
+          {/* A-B 반복 아이콘 */}
+          {isAbRepeatActive && (
+            <TouchableOpacity style={styles.headerIconButton}>
+              <Ionicons name="repeat" size={20} color={lavenderPalette.primary} />
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity style={styles.headerButton}>
+            <Ionicons name="ellipsis-horizontal" size={24} color={lavenderPalette.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Sentences */}
+      {/* Sentences - 몰입형 문장 보기 */}
       <ScrollView 
         ref={scrollViewRef}
         style={styles.sentencesContainer}
         contentContainerStyle={styles.sentencesContent}
+        showsVerticalScrollIndicator={false}
       >
         {episode.sentences && episode.sentences.length > 0 ? (
           episode.sentences.map((sentence: Sentence, index: number) => {
             const isActive = index === currentSentenceIndex
+            const isPrev = index === currentSentenceIndex - 1
+            const isNext = index === currentSentenceIndex + 1
+            const isContext = isPrev || isNext
             
             // Script 파싱
             const parsedSegments = sentence.text ? parseScript(sentence.text) : []
@@ -152,12 +192,23 @@ export default function StoryPlayerScreen() {
             return (
               <View
                 key={sentence.id}
+                ref={(ref) => {
+                  sentenceRefs.current[index] = ref
+                }}
+                onLayout={(event) => handleSentenceLayout(index, event)}
                 style={[
                   styles.sentenceCard,
-                  isActive && styles.sentenceCardActive
+                  isActive && styles.sentenceCardActive,
+                  isContext && styles.sentenceCardContext,
                 ]}
               >
-                <Text style={[styles.sentenceJapanese, isActive && styles.sentenceActiveText]}>
+                <Text
+                  style={[
+                    styles.sentenceJapanese,
+                    isActive && styles.sentenceJapaneseActive,
+                    isContext && styles.sentenceJapaneseContext,
+                  ]}
+                >
                   {renderParsedScript(
                     parsedSegments,
                     (wordId, wordText) => {
@@ -165,7 +216,7 @@ export default function StoryPlayerScreen() {
                       setSelectedWordId(wordId)
                       setWordSheetVisible(true)
                     },
-                    styles.sentenceJapanese,
+                    isActive ? styles.sentenceJapaneseActive : styles.sentenceJapanese,
                     styles.wordHighlight
                   )}
                 </Text>
@@ -289,33 +340,80 @@ const styles = StyleSheet.create({
     color: lavenderPalette.textSecondary,
     marginTop: 2,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  headerIconButton: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: spacing.sm,
+    backgroundColor: lavenderPalette.primaryLight,
+    minWidth: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIconText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: lavenderPalette.primaryDark,
+  },
 
-  // Sentences
+  // Sentences - 몰입형 문장 보기
   sentencesContainer: {
     flex: 1,
   },
   sentencesContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xl * 2,
-    gap: spacing.md,
+    paddingVertical: SCREEN_HEIGHT * 0.3, // 상단 여백 (중앙 정렬을 위해)
+    paddingHorizontal: spacing.lg,
+    paddingBottom: SCREEN_HEIGHT * 0.3 + spacing.xl * 2, // 하단 여백
   },
   sentenceCard: {
-    padding: spacing.lg,
-    borderRadius: spacing.md,
+    minHeight: 150,
+    padding: spacing.xl,
+    borderRadius: spacing.lg,
     backgroundColor: lavenderPalette.surface,
     borderWidth: 2,
     borderColor: 'transparent',
-    gap: spacing.sm,
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sentenceCardActive: {
     borderColor: lavenderPalette.primary,
     backgroundColor: lavenderPalette.primaryLight,
+    borderWidth: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    minHeight: 200,
+  },
+  sentenceCardContext: {
+    opacity: 0.4,
+    transform: [{ scale: 0.85 }],
   },
   sentenceJapanese: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: lavenderPalette.text,
-    lineHeight: 28,
+    lineHeight: 32,
+    textAlign: 'center',
+  },
+  sentenceJapaneseActive: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: lavenderPalette.primaryDark,
+    lineHeight: 48,
+  },
+  sentenceJapaneseContext: {
+    fontSize: 16,
+    opacity: 0.6,
   },
   wordHighlight: {
     color: lavenderPalette.primary,
