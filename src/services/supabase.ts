@@ -1,28 +1,23 @@
 /**
- * ⚠️ 프론트엔드에서는 Supabase를 직접 사용하지 않습니다!
- * 모든 DB 연동은 Edge Functions(서버)를 통해서만 처리합니다.
+ * ❌ 프론트엔드에서 Supabase 직접 사용 금지!
  * 
- * 이 파일은 레거시 코드(eventService, authService, wordService)에서
- * import되는 것을 막기 위한 더미 파일입니다.
+ * 모든 DB 연동은 서버(Edge Functions)를 통해서만 처리합니다.
+ * 
+ * 사용 방법:
+ * - apiClient.ts의 ApiClient.get(), ApiClient.post() 사용
+ * - Edge Functions 엔드포인트: /api/episodes, /api/auth, etc.
  */
 
-console.warn('⚠️ supabase.ts: 프론트엔드에서 Supabase 직접 접근은 권장되지 않습니다. Edge Functions를 사용하세요.')
+throw new Error(
+  '❌ Supabase를 프론트엔드에서 직접 import할 수 없습니다!\n\n' +
+  '해결 방법:\n' +
+  '1. apiClient.ts의 ApiClient를 사용하세요\n' +
+  '2. Edge Functions를 통해 데이터를 가져오세요\n' +
+  '3. eventService, authService, wordService는 사용하지 마세요 (TODO: Edge Functions로 마이그레이션)'
+)
 
-// 더미 Supabase 클라이언트 (에러 방지용)
-export const supabase = {
-  from: () => ({
-    select: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-    insert: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-    update: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-    delete: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-  }),
-  auth: {
-    signUp: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-    signInWithPassword: () => Promise.resolve({ data: null, error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-    signOut: () => Promise.resolve({ error: new Error('프론트엔드에서 Supabase 직접 접근 불가') }),
-    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-  },
-} as any
+// TypeScript 에러 방지용 export (실제로 실행되지 않음)
+export const supabase = null as any
 
 // 타입 정의들
 export interface Database {
