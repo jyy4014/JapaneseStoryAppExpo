@@ -2,14 +2,19 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl =
   process.env.EXPO_PUBLIC_SUPABASE_URL ||
-  process.env.SUPABASE_URL
+  process.env.SUPABASE_URL ||
+  'https://placeholder.supabase.co' // 개발 환경 fallback
 
 const supabaseAnonKey =
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY ||
+  'placeholder-anon-key' // 개발 환경 fallback
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your Expo config.')
+// 환경 변수가 없으면 경고만 출력
+if ((!process.env.EXPO_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) ||
+    (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY && !process.env.SUPABASE_ANON_KEY)) {
+  console.warn('⚠️ Supabase 환경 변수가 설정되지 않았습니다. API 요청이 실패할 수 있습니다.')
+  console.warn('로컬 개발: .env 파일에 EXPO_PUBLIC_SUPABASE_URL과 EXPO_PUBLIC_SUPABASE_ANON_KEY를 추가하세요.')
 }
 
 const isDevelopment = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production'
