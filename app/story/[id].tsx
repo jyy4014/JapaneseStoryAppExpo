@@ -10,11 +10,11 @@ import {
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { lavenderPalette, spacing, typography } from '../../constants/theme'
-import { AudioPlayer } from '../../components/player/AudioPlayer'
-import { EpisodeService } from '../../services/episodeService'
-import { usePlayerStore } from '../../stores/playerStore'
-import type { Episode, Sentence } from '../../types/dto/episode'
+import { lavenderPalette, spacing, typography } from '../../src/constants/theme'
+import { AudioPlayer } from '../../src/components/player/AudioPlayer'
+import { EpisodeService } from '../../src/services/episodeService'
+import { usePlayerStore } from '../../src/stores/playerStore'
+import type { Episode, Sentence } from '../../src/types/dto/episode'
 
 export default function StoryPlayerScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>()
