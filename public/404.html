@@ -1,31 +1,42 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>Japanese Story App</title>
-    <script>
-      // GitHub Pages SPA 라우팅 지원
-      // 404 페이지에서 실제 경로를 쿼리 파라미터로 저장하고 index.html로 리다이렉트
-      (function() {
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect != location.href) {
-          history.replaceState(null, null, redirect);
-        }
-      })();
-      
-      // 현재 경로를 저장
-      var path = location.pathname.slice(1);
-      if (path) {
-        sessionStorage.setItem('redirect', location.pathname + location.search + location.hash);
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>JapaneseStoryAppExpo</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
       }
-      
-      // 즉시 index.html로 리다이렉트
-      location.replace('/JapaneseStoryAppExpo/');
-    </script>
-  </head>
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  <link rel="icon" href="/JapaneseStoryAppExpo/favicon.ico" /></head>
+
   <body>
-    <p>Redirecting...</p>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  <!-- 404 페이지는 빌드 시 자동으로 올바른 JS 경로로 업데이트됩니다 -->
+  <script>
+    // GitHub Pages SPA 해결: 404에서도 동일한 앱을 로드
+    // Expo Router가 자동으로 URL을 읽고 올바른 페이지를 렌더링합니다
+  </script>
   </body>
 </html>
 
