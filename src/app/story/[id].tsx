@@ -192,10 +192,11 @@ export default function StoryPlayerScreen() {
         }}
         onSave={async (wordId) => {
           // TODO: userId 가져오기 (authStore에서)
-          console.log('Saving word:', wordId)
+          const userId = 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' // 테스트용 (나중에 authStore.user.id로 교체)
+          console.log('Saving word:', wordId, 'for user:', userId)
           
           const response = await fetch(
-            `https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api/words/${wordId}/save`,
+            `https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api/words/${encodeURIComponent(wordId)}/save`,
             {
               method: 'POST',
               headers: {
@@ -203,13 +204,17 @@ export default function StoryPlayerScreen() {
                 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
                 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6Y3NjcGNyYWtwZGZzdmx1eWVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyOTUzMDgsImV4cCI6MjA3NDg3MTMwOH0.YmMbhPQGml4-AbYhJgrrDf6m-ZBS7KPN3KTgmeNzsZw',
               },
-              body: JSON.stringify({ userId: 'test-user-id' }) // TODO: 실제 userId 사용
+              body: JSON.stringify({ userId })
             }
           )
           
           if (!response.ok) {
-            throw new Error('Failed to save word')
+            const errorData = await response.json()
+            console.error('Failed to save word:', errorData)
+            throw new Error(errorData.message || 'Failed to save word')
           }
+          
+          console.log('Word saved successfully!')
         }}
       />
     </SafeAreaView>
