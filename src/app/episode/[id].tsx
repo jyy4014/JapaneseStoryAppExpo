@@ -34,18 +34,10 @@ export default function EpisodeDetailScreen() {
     router.back()
   }, [router])
 
-  const handleStartListening = useCallback(async () => {
+  const handleStartListening = useCallback(() => {
     if (!episode) return
 
-    // 오디오를 미리 생성/확인
-    const { data, error: audioError } = await EpisodeService.getOrGenerateAudio(episode.id)
-
-    if (audioError || !data) {
-      Alert.alert('재생할 수 없어요', '오디오를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.')
-      return
-    }
-
-    // 플레이어 페이지로 이동
+    // 플레이어 페이지로 이동 (오디오 로드는 플레이어 페이지에서 처리)
     // EventService.logPlayStart(episode.id, 0) // TODO: Edge Functions를 통한 이벤트 로깅
     router.push(`/story/${episode.id}`)
   }, [episode, router])
