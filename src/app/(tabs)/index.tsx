@@ -27,22 +27,7 @@ export default function HomeScreen() {
     }
   }, [user, setUser])
 
-  // Load profile and streak on mount
-  useEffect(() => {
-    if (user?.id) {
-      loadProfile()
-      updateStreakProgress()
-    }
-  }, [user?.id])
-
-  // Update streak progress periodically (when episodes are loaded)
-  useEffect(() => {
-    if (user?.id && episodes.length > 0) {
-      updateStreakProgress()
-    }
-  }, [user?.id, episodes.length])
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user?.id) return
 
     if (__DEV__) {
@@ -71,9 +56,9 @@ export default function HomeScreen() {
         console.error('[HomeScreen] Failed to load profile:', error)
       }
     }
-  }
+  }, [user?.id, setUser])
 
-  const updateStreakProgress = async () => {
+  const updateStreakProgress = useCallback(async () => {
     if (!user?.id || streakLoading) return
 
     if (__DEV__) {
@@ -101,7 +86,22 @@ export default function HomeScreen() {
     } finally {
       setStreakLoading(false)
     }
-  }
+  }, [user?.id, streakLoading, updateStreak])
+
+  // Load profile and streak on mount
+  useEffect(() => {
+    if (user?.id) {
+      loadProfile()
+      updateStreakProgress()
+    }
+  }, [user?.id, loadProfile, updateStreakProgress])
+
+  // Update streak progress periodically (when episodes are loaded)
+  useEffect(() => {
+    if (user?.id && episodes.length > 0) {
+      updateStreakProgress()
+    }
+  }, [user?.id, episodes.length, updateStreakProgress])
 
   useEffect(() => {
     fetchEpisodes(

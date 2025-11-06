@@ -46,7 +46,9 @@ export function useAudioPlayer(episodeId: string | null | undefined) {
         setDuration(data.duration / 1000) // ms to seconds
       }
     } catch (err) {
-      console.error('Audio loading error:', err)
+      if (__DEV__) {
+        console.error('Audio loading error:', err)
+      }
       setError('오디오 로딩 중 오류가 발생했어요.')
     } finally {
       setLoading(false)
