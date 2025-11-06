@@ -44,8 +44,15 @@ export function useAudioPlayer(episodeId: string | null | undefined) {
       }
 
       if (data?.audioUrl) {
+        if (__DEV__) {
+          console.log('[useAudioPlayer] Audio URL loaded:', data.audioUrl)
+        }
         setAudioUrl(data.audioUrl)
         setDuration(data.duration / 1000) // ms to seconds
+      } else {
+        if (__DEV__) {
+          console.warn('[useAudioPlayer] No audio URL in response:', data)
+        }
       }
     } catch (err) {
       if (__DEV__) {
@@ -59,7 +66,14 @@ export function useAudioPlayer(episodeId: string | null | undefined) {
 
   // 오디오 초기화
   useEffect(() => {
+    // episodeId가 변경되면 audioUrl 초기화
+    setAudioUrl(null)
+    setError(null)
+    
     if (episodeId) {
+      if (__DEV__) {
+        console.log('[useAudioPlayer] Loading audio for episode:', episodeId)
+      }
       loadAudio()
     }
   }, [episodeId, loadAudio])
