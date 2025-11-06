@@ -36,7 +36,9 @@ export function useAudioPlayer(episodeId: string | null | undefined) {
       const { data, error } = await EpisodeService.getOrGenerateAudio(episodeId)
 
       if (error) {
-        console.warn('Audio load failed:', error)
+        if (__DEV__) {
+          console.warn('Audio load failed:', error)
+        }
         setError('오디오를 불러오지 못했어요.')
         return
       }

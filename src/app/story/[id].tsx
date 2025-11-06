@@ -36,7 +36,9 @@ export default function StoryPlayerScreen() {
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null)
   const [wordSheetVisible, setWordSheetVisible] = useState(false)
   
-  console.log('StoryPlayerScreen loaded with id:', id)
+  if (__DEV__) {
+    console.log('StoryPlayerScreen loaded with id:', id)
+  }
   
   const { currentTime } = usePlayerStore()
   const scrollViewRef = useRef<ScrollView>(null)
@@ -61,7 +63,9 @@ export default function StoryPlayerScreen() {
 
         setEpisode(data)
       } catch (err) {
-        console.error('Episode loading error:', err)
+        if (__DEV__) {
+          console.error('Episode loading error:', err)
+        }
         setError('에피소드 로딩 중 오류가 발생했어요.')
       } finally {
         setLoading(false)
