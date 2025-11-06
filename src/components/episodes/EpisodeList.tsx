@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, View, Text, ActivityIndicator, RefreshControl } f
 import { Link } from 'expo-router'
 import { lavenderPalette, spacing, typography } from '../../constants/theme'
 import { EpisodeCard } from './EpisodeCard'
+import { EpisodeCardSkeleton } from '../common/SkeletonLoader'
 import type { Episode } from '../../types/dto'
 import type { BaseComponentProps } from '../../types/dto/ui'
 
@@ -52,12 +53,7 @@ export function EpisodeList({
   }
 
   if (loading && episodes.length === 0) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={lavenderPalette.primary} />
-        <Text style={styles.loadingText}>에피소드를 불러오는 중입니다...</Text>
-      </View>
-    )
+    return <EpisodeCardSkeleton count={5} />
   }
 
   if (error && episodes.length === 0) {
