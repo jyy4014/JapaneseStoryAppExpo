@@ -36,11 +36,14 @@ export default function StoryPlayerScreen() {
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null)
   const [wordSheetVisible, setWordSheetVisible] = useState(false)
   
-  if (__DEV__) {
-    console.log('StoryPlayerScreen loaded with id:', id)
-  }
-  
   const { currentTime } = usePlayerStore()
+  
+  // 디버그 로그 (개발 환경에서만)
+  useEffect(() => {
+    if (__DEV__ && id) {
+      console.log('StoryPlayerScreen loaded with id:', id)
+    }
+  }, [id])
   const scrollViewRef = useRef<ScrollView>(null)
   const sentenceRefs = useRef<{ [key: number]: View | null }>({})
   const [sentenceLayouts, setSentenceLayouts] = useState<{ [key: number]: { y: number; height: number } }>({})
