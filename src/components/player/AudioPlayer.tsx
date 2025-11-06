@@ -45,49 +45,43 @@ export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
 
   // 오디오 엘리먼트 초기화 (웹 환경에서 DOM에 직접 추가)
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      // 웹 환경: DOM에 직접 audio 엘리먼트 추가
-      let audioElement: HTMLAudioElement | null = null
-      
-      if (audioUrl) {
-        // 기존 audio 엘리먼트 제거
-        const existing = document.getElementById('audio-player-element') as HTMLAudioElement
-        if (existing) {
-          existing.remove()
-        }
-        
-        // 새 audio 엘리먼트 생성
-        audioElement = document.createElement('audio')
-        audioElement.id = 'audio-player-element'
-        audioElement.style.display = 'none'
-        audioElement.src = audioUrl
-        audioElement.preload = 'auto'
-        
-        // 이벤트 리스너 추가
-        audioElement.addEventListener('timeupdate', handleTimeUpdate)
-        audioElement.addEventListener('ended', handleEnded)
-        audioElement.addEventListener('waiting', handleWaiting)
-        audioElement.addEventListener('canplay', handleCanPlay)
-        
-        document.body.appendChild(audioElement)
-        audioRef.current = audioElement
-      }
-      
-      // Cleanup
-      return () => {
-        if (audioElement) {
-          audioElement.removeEventListener('timeupdate', handleTimeUpdate)
-          audioElement.removeEventListener('ended', handleEnded)
-          audioElement.removeEventListener('waiting', handleWaiting)
-          audioElement.removeEventListener('canplay', handleCanPlay)
-          audioElement.remove()
-        }
-      }
-    } else if (audioRef.current && audioUrl) {
-      // React Native 환경
-      audioRef.current.src = audioUrl
+    if (typeof document === 'undefined' || !audioUrl) return
+    
+    // 웹 환경: DOM에 직접 audio 엘리먼트 추가
+    // 기존 audio 엘리먼트 제거
+    const existing = document.getElementById('audio-player-element') as HTMLAudioElement
+    if (existing) {
+      existing.remove()
     }
-  }, [audioUrl, audioRef, handleTimeUpdate, handleEnded, handleWaiting, handleCanPlay])
+    
+    // 새 audio 엘리먼트 생성
+    const audioElement = document.createElement('audio')
+    audioElement.id = 'audio-player-element'
+    audioElement.style.display = 'none'
+    audioElement.src = audioUrl
+    audioElement.preload = 'auto'
+    
+    // 이벤트 리스너 추가
+    audioElement.addEventListener('timeupdate', handleTimeUpdate)
+    audioElement.addEventListener('ended', handleEnded)
+    audioElement.addEventListener('waiting', handleWaiting)
+    audioElement.addEventListener('canplay', handleCanPlay)
+    
+    document.body.appendChild(audioElement)
+    audioRef.current = audioElement
+    
+    // Cleanup
+    return () => {
+      if (audioElement && audioElement.parentNode) {
+        audioElement.removeEventListener('timeupdate', handleTimeUpdate)
+        audioElement.removeEventListener('ended', handleEnded)
+        audioElement.removeEventListener('waiting', handleWaiting)
+        audioElement.removeEventListener('canplay', handleCanPlay)
+        audioElement.remove()
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioUrl]) // audioUrl만 dependency로 사용
 
   if (loading) {
     return (
