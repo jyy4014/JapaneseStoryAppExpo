@@ -44,13 +44,15 @@ export default function HomeScreen() {
   const loadProfile = async () => {
     if (!user?.id) return
 
+    console.log('[HomeScreen] Loading profile for user:', user.id)
     try {
       const { data, error } = await UserService.getProfile(user.id)
       if (error) {
-        console.error('Failed to load profile:', error)
+        console.error('[HomeScreen] Failed to load profile:', error)
         return
       }
       if (data) {
+        console.log('[HomeScreen] Profile loaded:', { currentStreak: data.currentStreak, lastCompletedDate: data.lastCompletedDate })
         setUser({
           ...user,
           currentStreak: data.currentStreak,
@@ -58,7 +60,7 @@ export default function HomeScreen() {
         })
       }
     } catch (error) {
-      console.error('Failed to load profile:', error)
+      console.error('[HomeScreen] Failed to load profile:', error)
     }
   }
 
