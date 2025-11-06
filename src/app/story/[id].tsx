@@ -465,4 +465,47 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: lavenderPalette.textSecondary,
   },
+  headerTitleSkeleton: {
+    width: 120,
+    height: 20,
+    backgroundColor: lavenderPalette.primaryLight,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  headerSubtitleSkeleton: {
+    width: 80,
+    height: 14,
+    backgroundColor: lavenderPalette.primaryLight,
+    borderRadius: 4,
+  },
+  playerSkeleton: {
+    padding: spacing.lg,
+    backgroundColor: lavenderPalette.surface,
+    borderTopWidth: 1,
+    borderTopColor: '#EBE3FF',
+    gap: spacing.lg,
+  },
+  playerSkeletonBar: {
+    height: 6,
+    backgroundColor: lavenderPalette.primaryLight,
+    borderRadius: 3,
+  },
+  playerSkeletonControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xl,
+  },
+  playerSkeletonButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: lavenderPalette.primaryLight,
+  },
+  playerSkeletonPlayButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: lavenderPalette.primaryLight,
+  },
 })
