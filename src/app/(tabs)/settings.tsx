@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   SafeAreaView,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   Switch,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -50,6 +51,9 @@ export default function SettingsScreen() {
   const [editDailyGoalModal, setEditDailyGoalModal] = useState(false)
   const [editDailyGoal, setEditDailyGoal] = useState(10)
   const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const checkScaleAnim = useRef(new Animated.Value(0)).current
+  const checkOpacityAnim = useRef(new Animated.Value(0)).current
   const userId = user?.id || 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' // 테스트용
 
   // 설정 및 프로필 로드
@@ -125,6 +129,7 @@ export default function SettingsScreen() {
     if (!userId) return
 
     setSaving(true)
+    setSaveSuccess(false)
     try {
       const baseUrl = 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api'
       const headers = {
@@ -146,11 +151,34 @@ export default function SettingsScreen() {
       const data = await res.json()
       setProfile(data.profile)
       setUser({ ...user, display_name: data.profile.displayName })
-      setEditDisplayNameModal(false)
+      
+      // 성공 피드백 애니메이션
+      setSaveSuccess(true)
+      checkScaleAnim.setValue(0)
+      checkOpacityAnim.setValue(0)
+      
+      Animated.parallel([
+        Animated.spring(checkScaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 7,
+        }),
+        Animated.timing(checkOpacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // 1초 후 모달 닫기
+        setTimeout(() => {
+          setEditDisplayNameModal(false)
+          setSaveSuccess(false)
+        }, 1000)
+      })
     } catch (error) {
       console.error('Failed to update profile:', error)
       Alert.alert('오류', '프로필을 업데이트하지 못했습니다.')
-    } finally {
       setSaving(false)
     }
   }
@@ -159,6 +187,7 @@ export default function SettingsScreen() {
     if (!userId) return
 
     setSaving(true)
+    setSaveSuccess(false)
     try {
       const baseUrl = 'https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api'
       const headers = {
@@ -179,12 +208,35 @@ export default function SettingsScreen() {
 
       const data = await res.json()
       setPreferences(data.preferences)
-      setEditDifficultyModal(false)
-      setEditDailyGoalModal(false)
+      
+      // 성공 피드백 애니메이션
+      setSaveSuccess(true)
+      checkScaleAnim.setValue(0)
+      checkOpacityAnim.setValue(0)
+      
+      Animated.parallel([
+        Animated.spring(checkScaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 7,
+        }),
+        Animated.timing(checkOpacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // 1초 후 모달 닫기
+        setTimeout(() => {
+          setEditDifficultyModal(false)
+          setEditDailyGoalModal(false)
+          setSaveSuccess(false)
+        }, 1000)
+      })
     } catch (error) {
       console.error('Failed to update settings:', error)
       Alert.alert('오류', '설정을 업데이트하지 못했습니다.')
-    } finally {
       setSaving(false)
     }
   }
@@ -341,10 +393,43 @@ export default function SettingsScreen() {
                     updateProfile(editDisplayName.trim())
                   }
                 }}
-                disabled={saving || !editDisplayName.trim()}
+                disabled={saving || !editDisplayName.trim() || saveSuccess}
               >
                 {saving ? (
                   <ActivityIndicator size="small" color={lavenderPalette.surface} />
+                ) : saveSuccess ? (
+                  <Animated.View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.xs,
+                      opacity: checkOpacityAnim,
+                      transform: [
+                        {
+                          scale: checkScaleAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.8, 1],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <Animated.View
+                      style={{
+                        transform: [
+                          {
+                            scale: checkScaleAnim.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [0, 1.2, 1],
+                            }),
+                          },
+                        ],
+                      }}
+                    >
+                      <Ionicons name="checkmark-circle" size={20} color={lavenderPalette.surface} />
+                    </Animated.View>
+                    <Text style={styles.modalButtonTextSave}>저장 완료!</Text>
+                  </Animated.View>
                 ) : (
                   <Text style={styles.modalButtonTextSave}>저장</Text>
                 )}
@@ -423,10 +508,43 @@ export default function SettingsScreen() {
                 onPress={() => {
                   updateSettings({ dailyGoalMinutes: editDailyGoal })
                 }}
-                disabled={saving}
+                disabled={saving || saveSuccess}
               >
                 {saving ? (
                   <ActivityIndicator size="small" color={lavenderPalette.surface} />
+                ) : saveSuccess ? (
+                  <Animated.View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing.xs,
+                      opacity: checkOpacityAnim,
+                      transform: [
+                        {
+                          scale: checkScaleAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.8, 1],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    <Animated.View
+                      style={{
+                        transform: [
+                          {
+                            scale: checkScaleAnim.interpolate({
+                              inputRange: [0, 0.5, 1],
+                              outputRange: [0, 1.2, 1],
+                            }),
+                          },
+                        ],
+                      }}
+                    >
+                      <Ionicons name="checkmark-circle" size={20} color={lavenderPalette.surface} />
+                    </Animated.View>
+                    <Text style={styles.modalButtonTextSave}>저장 완료!</Text>
+                  </Animated.View>
                 ) : (
                   <Text style={styles.modalButtonTextSave}>저장</Text>
                 )}

@@ -40,6 +40,8 @@ export function WordBottomSheet({ visible, wordId, onClose, onSave }: WordBottom
   const [saved, setSaved] = useState(false)
 
   const slideAnim = React.useRef(new Animated.Value(BOTTOM_SHEET_HEIGHT)).current
+  const checkScaleAnim = React.useRef(new Animated.Value(0)).current
+  const checkOpacityAnim = React.useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     if (visible) {
@@ -105,15 +107,32 @@ export function WordBottomSheet({ visible, wordId, onClose, onSave }: WordBottom
     try {
       setSaving(true)
       await onSave(word.id)
-      setSaved(true)
       
-      // 1초 후 자동으로 닫기
+      // 저장 완료 애니메이션
+      setSaved(true)
+      checkScaleAnim.setValue(0)
+      checkOpacityAnim.setValue(0)
+      
+      Animated.parallel([
+        Animated.spring(checkScaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 100,
+          friction: 7,
+        }),
+        Animated.timing(checkOpacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start()
+      
+      // 1.5초 후 자동으로 닫기
       setTimeout(() => {
         onClose()
-      }, 1000)
+      }, 1500)
     } catch (error) {
       console.error('Error saving word:', error)
-    } finally {
       setSaving(false)
     }
   }
@@ -179,10 +198,38 @@ export function WordBottomSheet({ visible, wordId, onClose, onSave }: WordBottom
                     {/* Action Buttons */}
                     <View style={styles.actionButtons}>
                       {saved ? (
-                        <View style={styles.savedButton}>
-                          <Ionicons name="checkmark-circle" size={20} color={lavenderPalette.surface} />
+                        <Animated.View
+                          style={[
+                            styles.savedButton,
+                            {
+                              opacity: checkOpacityAnim,
+                              transform: [
+                                {
+                                  scale: checkScaleAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0.8, 1],
+                                  }),
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          <Animated.View
+                            style={{
+                              transform: [
+                                {
+                                  scale: checkScaleAnim.interpolate({
+                                    inputRange: [0, 0.5, 1],
+                                    outputRange: [0, 1.2, 1],
+                                  }),
+                                },
+                              ],
+                            }}
+                          >
+                            <Ionicons name="checkmark-circle" size={24} color={lavenderPalette.surface} />
+                          </Animated.View>
                           <Text style={styles.savedButtonText}>저장 완료!</Text>
-                        </View>
+                        </Animated.View>
                       ) : (
                         <TouchableOpacity
                           style={styles.saveButton}
