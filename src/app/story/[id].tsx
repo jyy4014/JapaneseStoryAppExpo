@@ -113,9 +113,31 @@ export default function StoryPlayerScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={lavenderPalette.primary} />
-          <Text style={styles.loadingText}>에피소드를 불러오는 중...</Text>
+        {/* Header Skeleton */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={lavenderPalette.text} />
+          </TouchableOpacity>
+          <View style={styles.headerInfo}>
+            <View style={styles.headerTitleSkeleton} />
+            <View style={styles.headerSubtitleSkeleton} />
+          </View>
+          <View style={styles.headerButton} />
+        </View>
+
+        {/* Sentences Skeleton */}
+        <ScrollView style={styles.sentencesContainer} contentContainerStyle={styles.sentencesContent}>
+          <SentenceSkeleton count={8} />
+        </ScrollView>
+
+        {/* Audio Player Skeleton */}
+        <View style={styles.playerSkeleton}>
+          <View style={styles.playerSkeletonBar} />
+          <View style={styles.playerSkeletonControls}>
+            <View style={styles.playerSkeletonButton} />
+            <View style={styles.playerSkeletonPlayButton} />
+            <View style={styles.playerSkeletonButton} />
+          </View>
         </View>
       </SafeAreaView>
     )
