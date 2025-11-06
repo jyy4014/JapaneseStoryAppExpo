@@ -121,6 +121,9 @@ export default function StoryPlayerScreen() {
   }
 
   if (loading) {
+    if (__DEV__) {
+      console.log('[StoryPlayerScreen] Loading state, id:', id)
+    }
     return (
       <SafeAreaView style={styles.container}>
         {/* Header Skeleton */}
@@ -154,6 +157,9 @@ export default function StoryPlayerScreen() {
   }
 
   if (error || !episode) {
+    if (__DEV__) {
+      console.log('[StoryPlayerScreen] Error or no episode:', { error, hasEpisode: !!episode, id })
+    }
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
