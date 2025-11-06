@@ -12,9 +12,12 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Linking,
+  Platform,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import Constants from 'expo-constants'
 import { lavenderPalette, spacing, typography } from '../../constants/theme'
 import { useAuthStore } from '../../stores/authStore'
 
@@ -349,13 +352,13 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>앱 정보</Text>
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>버전</Text>
-            <Text style={styles.settingValueText}>1.0.0</Text>
+            <Text style={styles.settingValueText}>{appVersion}</Text>
           </View>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleOpenTerms}>
             <Text style={styles.settingLabel}>서비스 이용 약관</Text>
             <Ionicons name="chevron-forward" size={20} color={lavenderPalette.textSecondary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleOpenPrivacy}>
             <Text style={styles.settingLabel}>개인정보 처리 방침</Text>
             <Ionicons name="chevron-forward" size={20} color={lavenderPalette.textSecondary} />
           </TouchableOpacity>
