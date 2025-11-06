@@ -21,8 +21,9 @@ export default function HomeScreen() {
   const [streakLoading, setStreakLoading] = useState(false)
 
   useEffect(() => {
-    if (!user && debugAuthConfig.useMockAuth) {
-      setUser(debugAuthConfig.mockUser)
+    // 배포 환경에서도 테스트를 위해 실제 DB 사용자 ID 사용
+    if (!user) {
+      setUser({ id: 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' })
     }
   }, [user, setUser])
 
