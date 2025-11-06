@@ -6,8 +6,8 @@ interface EpisodesState {
   loading: boolean
   error: string | null
   lastUpdated: string | null
-  fetchEpisodes: (filters?: EpisodeFilters) => Promise<void>
-  refreshEpisodes: (filters?: EpisodeFilters) => Promise<void>
+  fetchEpisodes: (filters?: EpisodeFilters, userId?: string) => Promise<void>
+  refreshEpisodes: (filters?: EpisodeFilters, userId?: string) => Promise<void>
 }
 
 export const useEpisodesStore = create<EpisodesState>((set) => ({
@@ -15,11 +15,11 @@ export const useEpisodesStore = create<EpisodesState>((set) => ({
   loading: false,
   error: null,
   lastUpdated: null,
-  async fetchEpisodes(filters) {
+  async fetchEpisodes(filters, userId) {
     set({ loading: true, error: null })
     try {
       const { EpisodeService } = await import('../services/episodeService')
-      const { data, error } = await EpisodeService.getEpisodes(filters)
+      const { data, error } = await EpisodeService.getEpisodes(filters, userId)
 
       if (error) {
         console.error('Episode fetch failed', error)
@@ -47,7 +47,7 @@ export const useEpisodesStore = create<EpisodesState>((set) => ({
       })
     }
   },
-  async refreshEpisodes(filters) {
-    await useEpisodesStore.getState().fetchEpisodes(filters)
+  async refreshEpisodes(filters, userId) {
+    await useEpisodesStore.getState().fetchEpisodes(filters, userId)
   },
 }))

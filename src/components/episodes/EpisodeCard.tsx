@@ -15,6 +15,13 @@ export function EpisodeCard({ episode, onPress, testID, ...touchableProps }: Epi
   const difficultyIndex = Math.max(0, Math.min(4, (episode.difficulty ?? 1) - 1))
   const difficultyLabel = difficultyLabels[difficultyIndex]
 
+  // 진행률 계산
+  const progress = episode.progress
+  const progressPercentage =
+    progress && durationSource > 0
+      ? Math.min(100, Math.round((progress.currentPositionMs / durationSource) * 100))
+      : 0
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -43,6 +50,16 @@ export function EpisodeCard({ episode, onPress, testID, ...touchableProps }: Epi
             {episode.summary}
           </Text>
         ) : null}
+
+        {/* 진행률 표시 */}
+        {progress && progressPercentage > 0 && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
+            </View>
+            <Text style={styles.progressText}>{progressPercentage}%</Text>
+          </View>
+        )}
 
         <View style={styles.metaRow}>
           <View style={styles.chip}>
@@ -140,5 +157,29 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 12,
     color: lavenderPalette.textSecondary,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  progressBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: lavenderPalette.primaryLight,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: lavenderPalette.primaryDark,
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: lavenderPalette.primaryDark,
+    minWidth: 35,
   },
 })

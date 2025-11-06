@@ -29,8 +29,9 @@ export default function HomeScreen() {
       selectedDifficulty != null
         ? { difficulty: selectedDifficulty }
         : undefined,
+      user?.id,
     )
-  }, [fetchEpisodes, selectedDifficulty])
+  }, [fetchEpisodes, selectedDifficulty, user?.id])
 
   const handleEpisodePress = useCallback(
     (episode: Episode) => {
@@ -44,8 +45,9 @@ export default function HomeScreen() {
       selectedDifficulty != null
         ? { difficulty: selectedDifficulty }
         : undefined,
+      user?.id,
     )
-  }, [refreshEpisodes, selectedDifficulty])
+  }, [refreshEpisodes, selectedDifficulty, user?.id])
 
   const headerComponent = useMemo(
     () => (

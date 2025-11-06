@@ -8,7 +8,10 @@ export interface AudioResponse {
 }
 
 export class EpisodeService {
-  static async getEpisodes(filters?: EpisodeFilters): Promise<{ data: Episode[] | null; error: ApiError | null }> {
+  static async getEpisodes(
+    filters?: EpisodeFilters,
+    userId?: string,
+  ): Promise<{ data: Episode[] | null; error: ApiError | null }> {
     const query = filters
       ? {
           difficulty: filters.difficulty,
@@ -16,8 +19,11 @@ export class EpisodeService {
           category: filters.category,
           limit: filters.limit,
           offset: filters.offset,
+          ...(userId ? { userId } : {}),
         }
-      : undefined
+      : userId
+        ? { userId }
+        : undefined
 
     const { data, error } = await ApiClient.get<EpisodeListResponse>('/episodes', query)
 
