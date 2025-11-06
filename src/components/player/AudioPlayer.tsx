@@ -43,12 +43,51 @@ export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
     clearAbRepeat 
   } = usePlayerStore()
 
-  // 오디오 엘리먼트 초기화
+  // 오디오 엘리먼트 초기화 (웹 환경에서 DOM에 직접 추가)
   useEffect(() => {
-    if (audioRef.current && audioUrl) {
+    if (typeof document !== 'undefined') {
+      // 웹 환경: DOM에 직접 audio 엘리먼트 추가
+      let audioElement: HTMLAudioElement | null = null
+      
+      if (audioUrl) {
+        // 기존 audio 엘리먼트 제거
+        const existing = document.getElementById('audio-player-element') as HTMLAudioElement
+        if (existing) {
+          existing.remove()
+        }
+        
+        // 새 audio 엘리먼트 생성
+        audioElement = document.createElement('audio')
+        audioElement.id = 'audio-player-element'
+        audioElement.style.display = 'none'
+        audioElement.src = audioUrl
+        audioElement.preload = 'auto'
+        
+        // 이벤트 리스너 추가
+        audioElement.addEventListener('timeupdate', handleTimeUpdate)
+        audioElement.addEventListener('ended', handleEnded)
+        audioElement.addEventListener('waiting', handleWaiting)
+        audioElement.addEventListener('canplay', handleCanPlay)
+        
+        document.body.appendChild(audioElement)
+        audioRef.current = audioElement
+      }
+      
+      // Cleanup
+      return () => {
+        if (audioElement) {
+          audioElement.removeEventListener('timeupdate', handleTimeUpdate)
+          audioElement.removeEventListener('ended', handleEnded)
+          audioElement.removeEventListener('waiting', handleWaiting)
+          audioElement.removeEventListener('canplay', handleCanPlay)
+          audioElement.remove()
+        }
+      }
+    } else if (audioRef.current && audioUrl) {
+      // React Native 환경
       audioRef.current.src = audioUrl
     }
-  }, [audioUrl, audioRef])
+  }, [audioUrl, audioRef, handleTimeUpdate, handleEnded, handleWaiting, handleCanPlay])
 
   if (loading) {
     return (
@@ -71,14 +110,7 @@ export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
 
   return (
     <View style={styles.container}>
-      {/* Hidden audio element */}
-      <audio
-        ref={audioRef as any}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={handleEnded}
-        onWaiting={handleWaiting}
-        onCanPlay={handleCanPlay}
-      />
+      {/* Audio element is created in useEffect for web compatibility */}
 
       {/* Progress Bar */}
       <View style={styles.progressSection}>
