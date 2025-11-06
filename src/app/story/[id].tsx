@@ -263,7 +263,12 @@ export default function StoryPlayerScreen() {
       </ScrollView>
 
       {/* Audio Player */}
-      {id && <AudioPlayer episodeId={id} />}
+      {(() => {
+        if (__DEV__) {
+          console.log('[StoryPlayerScreen] Rendering AudioPlayer with id:', id)
+        }
+        return id ? <AudioPlayer episodeId={id} /> : null
+      })()}
       
       {/* Word Bottom Sheet */}
       <WordBottomSheet
