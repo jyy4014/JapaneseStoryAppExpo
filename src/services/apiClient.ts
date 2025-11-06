@@ -11,8 +11,8 @@ export type RequestOptions = Omit<RequestInit, 'body'> & {
   query?: RequestQuery
 }
 
+// GET 요청에는 Content-Type을 보내지 않아 CORS preflight를 피함
 const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
   Accept: 'application/json',
 }
 
@@ -92,9 +92,17 @@ export class ApiClient {
       ...rest,
     }
 
+    // POST/PUT 등 body가 있는 경우에만 Content-Type 추가 (CORS preflight 방지)
     if (body !== undefined) {
       const payload = typeof body === 'string' ? body : JSON.stringify(body)
       fetchOptions.body = payload as any
+      // body가 있을 때만 Content-Type 추가
+      if (!fetchOptions.headers) {
+        fetchOptions.headers = {}
+      }
+      if (!(fetchOptions.headers as Record<string, string>)['Content-Type']) {
+        ;(fetchOptions.headers as Record<string, string>)['Content-Type'] = 'application/json'
+      }
     }
 
     // 요청 시작 로그
