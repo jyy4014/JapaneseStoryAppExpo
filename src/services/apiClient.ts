@@ -73,11 +73,13 @@ const parseBody = async (response: Response) => {
 }
 
 export class ApiClient {
-  static async request<T>(path: string, options: RequestOptions = {}) {
+  static async request<T>(path: string, options: RequestOptions = {}, retryCount = 0): Promise<{ data: T | null; error: ApiError | null }> {
     const { method = 'GET', query, headers, body, ...rest } = options
     const url = buildUrl(path, query)
     const requestId = Math.random().toString(36).substring(7)
     const startTime = Date.now()
+    const maxRetries = 2
+    const retryDelay = 500 // 500ms
 
     const fetchOptions: RequestInit = {
       method,
@@ -96,11 +98,12 @@ export class ApiClient {
     }
 
     // 요청 시작 로그
-    console.log(`[ApiClient:${requestId}] Request started`, {
+    console.log(`[ApiClient:${requestId}] Request started${retryCount > 0 ? ` (retry ${retryCount})` : ''}`, {
       method,
       path,
       url: url.toString(),
       hasBody: !!body,
+      retryCount,
       headers: {
         ...fetchOptions.headers,
         // 민감한 정보는 마스킹
@@ -119,6 +122,7 @@ export class ApiClient {
         statusText: response.statusText,
         url: response.url,
         duration: `${duration}ms`,
+        retryCount,
         headers: Object.fromEntries(response.headers.entries()),
       })
 
@@ -130,6 +134,7 @@ export class ApiClient {
           statusText: response.statusText,
           payload,
           url: response.url,
+          retryCount,
         })
 
         const error: ApiError = {
@@ -144,6 +149,7 @@ export class ApiClient {
         status: response.status,
         hasData: !!payload,
         duration: `${duration}ms`,
+        retryCount,
       })
 
       return { data: payload as T, error: null }
@@ -160,9 +166,17 @@ export class ApiClient {
         url: url.toString(),
         method,
         duration: `${duration}ms`,
+        retryCount,
         errorType: error instanceof TypeError ? 'TypeError (CORS/Network)' : 
                   error instanceof Error ? error.constructor.name : 'Unknown',
       })
+
+      // 재시도 로직: 네트워크 에러이고 재시도 횟수가 남아있으면 재시도
+      if (retryCount < maxRetries && error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.log(`[ApiClient:${requestId}] Retrying request after ${retryDelay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)))
+        return this.request<T>(path, options, retryCount + 1)
+      }
 
       const apiError: ApiError = {
         message: error instanceof Error ? error.message : 'Network request failed',
