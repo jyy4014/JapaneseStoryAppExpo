@@ -9,20 +9,80 @@ import { GuideItem } from '../../components/common/GuideItem'
 import { SectionBlock } from '../../components/common/SectionBlock'
 import { useEpisodesStore } from '../../stores/episodesStore'
 import { useAuthStore } from '../../stores/authStore'
+import { UserService } from '../../services/userService'
 import { debugAuthConfig } from '../../config/debug'
 import type { Episode } from '../../types/dto'
 
 export default function HomeScreen() {
   const router = useRouter()
   const { episodes, loading, error, fetchEpisodes, refreshEpisodes } = useEpisodesStore()
-  const { user, setUser } = useAuthStore()
+  const { user, setUser, updateStreak } = useAuthStore()
   const [selectedDifficulty, setSelectedDifficulty] = useState<number | null>(null)
+  const [streakLoading, setStreakLoading] = useState(false)
 
   useEffect(() => {
     if (!user && debugAuthConfig.useMockAuth) {
       setUser(debugAuthConfig.mockUser)
     }
   }, [user, setUser])
+
+  // Load profile and streak on mount
+  useEffect(() => {
+    if (user?.id) {
+      loadProfile()
+      updateStreakProgress()
+    }
+  }, [user?.id])
+
+  // Update streak progress periodically (when episodes are loaded)
+  useEffect(() => {
+    if (user?.id && episodes.length > 0) {
+      updateStreakProgress()
+    }
+  }, [user?.id, episodes.length])
+
+  const loadProfile = async () => {
+    if (!user?.id) return
+
+    try {
+      const { data, error } = await UserService.getProfile(user.id)
+      if (error) {
+        console.error('Failed to load profile:', error)
+        return
+      }
+      if (data) {
+        setUser({
+          ...user,
+          currentStreak: data.currentStreak,
+          lastCompletedDate: data.lastCompletedDate,
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error)
+    }
+  }
+
+  const updateStreakProgress = async () => {
+    if (!user?.id || streakLoading) return
+
+    console.log('[HomeScreen] Updating streak progress for user:', user.id)
+    setStreakLoading(true)
+    try {
+      const { data, error } = await UserService.updateDailyGoalProgress(user.id)
+      if (error) {
+        console.error('[HomeScreen] Failed to update streak:', error)
+        return
+      }
+      if (data) {
+        console.log('[HomeScreen] Streak updated:', { currentStreak: data.currentStreak, lastCompletedDate: data.lastCompletedDate })
+        updateStreak(data.currentStreak, data.lastCompletedDate)
+      }
+    } catch (error) {
+      console.error('[HomeScreen] Failed to update streak:', error)
+    } finally {
+      setStreakLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchEpisodes(
@@ -52,6 +112,14 @@ export default function HomeScreen() {
   const headerComponent = useMemo(
     () => (
       <View style={styles.headerContainer}>
+        {user?.currentStreak && user.currentStreak > 0 && (
+          <View style={styles.streakCard}>
+            <Ionicons name="flame" size={24} color={lavenderPalette.primary} />
+            <Text style={styles.streakText}>
+              {user.currentStreak}일 연속 학습 중!
+            </Text>
+          </View>
+        )}
         <View style={styles.heroCard}>
           <Text style={styles.heroTitle}>와, 오늘도 이야기 한 컵 어떠세요?</Text>
           <Text style={styles.heroSubtitle}>
@@ -82,7 +150,7 @@ export default function HomeScreen() {
         </View>
       </View>
     ),
-    [selectedDifficulty],
+    [selectedDifficulty, user?.currentStreak],
   )
 
   return (
@@ -186,6 +254,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.titleMedium,
     color: lavenderPalette.text,
+  },
+  streakCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: lavenderPalette.primaryLight,
+    borderRadius: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  streakText: {
+    ...typography.titleMedium,
+    fontSize: 16,
+    fontWeight: '600',
+    color: lavenderPalette.primaryDark,
   },
 })
 
