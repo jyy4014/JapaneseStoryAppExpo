@@ -41,16 +41,23 @@ const getAuthHeaders = () => {
 const buildUrl = (path: string, query?: RequestQuery) => {
   const baseUrl = resolveBaseUrl().replace(/\/$/, '')
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const url = new URL(`${baseUrl}${normalizedPath}`)
-
+  
+  // URL 인코딩을 방지하기 위해 문자열로 직접 구성
+  let urlString = `${baseUrl}${normalizedPath}`
+  
   if (query) {
+    const searchParams = new URLSearchParams()
     Object.entries(query).forEach(([key, value]) => {
       if (value === undefined || value === null) return
-      url.searchParams.append(key, String(value))
+      searchParams.append(key, String(value))
     })
+    const queryString = searchParams.toString()
+    if (queryString) {
+      urlString += `?${queryString}`
+    }
   }
 
-  return url
+  return new URL(urlString)
 }
 
 const parseBody = async (response: Response) => {
