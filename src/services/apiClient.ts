@@ -79,7 +79,7 @@ export class ApiClient {
 
     const fetchOptions: RequestInit = {
       method,
-      credentials: 'include',
+      // credentials: 'include'를 제거하여 CORS 문제 방지
       headers: {
         ...DEFAULT_HEADERS,
         ...getAuthHeaders(),
