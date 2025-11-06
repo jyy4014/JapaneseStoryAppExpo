@@ -12,6 +12,10 @@ interface AudioPlayerProps extends BaseComponentProps {
 }
 
 export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
+  if (__DEV__) {
+    console.log('[AudioPlayer] Component rendered with episodeId:', episodeId)
+  }
+  
   const {
     audioUrl,
     audioRef,
@@ -31,6 +35,10 @@ export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
     handleWaiting,
     handleCanPlay,
   } = useAudioPlayer(episodeId)
+  
+  if (__DEV__) {
+    console.log('[AudioPlayer] State:', { episodeId, audioUrl, loading, error })
+  }
 
   const { 
     setPlaybackRate, 
