@@ -45,12 +45,24 @@ export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
 
   // 오디오 엘리먼트 초기화 (웹 환경에서 DOM에 직접 추가)
   useEffect(() => {
-    if (typeof document === 'undefined' || !audioUrl) return
+    if (typeof document === 'undefined' || !audioUrl) {
+      if (__DEV__) {
+        console.log('[AudioPlayer] Skipping audio element creation:', { hasDocument: typeof document !== 'undefined', audioUrl })
+      }
+      return
+    }
+    
+    if (__DEV__) {
+      console.log('[AudioPlayer] Creating audio element with URL:', audioUrl)
+    }
     
     // 웹 환경: DOM에 직접 audio 엘리먼트 추가
     // 기존 audio 엘리먼트 제거
     const existing = document.getElementById('audio-player-element') as HTMLAudioElement
     if (existing) {
+      if (__DEV__) {
+        console.log('[AudioPlayer] Removing existing audio element')
+      }
       existing.remove()
     }
     
@@ -70,9 +82,16 @@ export function AudioPlayer({ episodeId, onClose }: AudioPlayerProps) {
     document.body.appendChild(audioElement)
     audioRef.current = audioElement
     
+    if (__DEV__) {
+      console.log('[AudioPlayer] Audio element created and added to DOM:', { id: audioElement.id, src: audioElement.src })
+    }
+    
     // Cleanup
     return () => {
       if (audioElement && audioElement.parentNode) {
+        if (__DEV__) {
+          console.log('[AudioPlayer] Cleaning up audio element')
+        }
         audioElement.removeEventListener('timeupdate', handleTimeUpdate)
         audioElement.removeEventListener('ended', handleEnded)
         audioElement.removeEventListener('waiting', handleWaiting)
