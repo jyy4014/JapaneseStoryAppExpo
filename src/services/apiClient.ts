@@ -76,6 +76,8 @@ export class ApiClient {
   static async request<T>(path: string, options: RequestOptions = {}) {
     const { method = 'GET', query, headers, body, ...rest } = options
     const url = buildUrl(path, query)
+    const requestId = Math.random().toString(36).substring(7)
+    const startTime = Date.now()
 
     const fetchOptions: RequestInit = {
       method,
@@ -93,11 +95,43 @@ export class ApiClient {
       fetchOptions.body = payload as any
     }
 
+    // 요청 시작 로그
+    console.log(`[ApiClient:${requestId}] Request started`, {
+      method,
+      path,
+      url: url.toString(),
+      hasBody: !!body,
+      headers: {
+        ...fetchOptions.headers,
+        // 민감한 정보는 마스킹
+        apikey: fetchOptions.headers?.['apikey'] ? '[REDACTED]' : undefined,
+        Authorization: fetchOptions.headers?.['Authorization'] ? '[REDACTED]' : undefined,
+      },
+    })
+
     try {
       const response = await fetch(url.toString(), fetchOptions)
+      const duration = Date.now() - startTime
+
+      // 응답 로그
+      console.log(`[ApiClient:${requestId}] Response received`, {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url,
+        duration: `${duration}ms`,
+        headers: Object.fromEntries(response.headers.entries()),
+      })
+
       const payload = await parseBody(response)
 
       if (!response.ok) {
+        console.error(`[ApiClient:${requestId}] Request failed`, {
+          status: response.status,
+          statusText: response.statusText,
+          payload,
+          url: response.url,
+        })
+
         const error: ApiError = {
           message: payload?.message || 'Request failed',
           status: response.status,
@@ -106,8 +140,30 @@ export class ApiClient {
         return { data: null as T | null, error }
       }
 
+      console.log(`[ApiClient:${requestId}] Request succeeded`, {
+        status: response.status,
+        hasData: !!payload,
+        duration: `${duration}ms`,
+      })
+
       return { data: payload as T, error: null }
     } catch (error) {
+      const duration = Date.now() - startTime
+
+      // 네트워크 에러 상세 로그
+      console.error(`[ApiClient:${requestId}] Network error`, {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        } : error,
+        url: url.toString(),
+        method,
+        duration: `${duration}ms`,
+        errorType: error instanceof TypeError ? 'TypeError (CORS/Network)' : 
+                  error instanceof Error ? error.constructor.name : 'Unknown',
+      })
+
       const apiError: ApiError = {
         message: error instanceof Error ? error.message : 'Network request failed',
         payload: error,
