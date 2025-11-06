@@ -260,6 +260,39 @@ export default function SettingsScreen() {
     ])
   }
 
+  const handleOpenTerms = async () => {
+    const termsUrl = 'https://jyy4014.github.io/JapaneseStoryAppExpo/terms' // TODO: 실제 약관 페이지 URL로 변경
+    try {
+      const supported = await Linking.canOpenURL(termsUrl)
+      if (supported) {
+        await Linking.openURL(termsUrl)
+      } else {
+        Alert.alert('안내', '약관 페이지를 열 수 없습니다.')
+      }
+    } catch (error) {
+      console.error('Error opening terms:', error)
+      Alert.alert('오류', '약관 페이지를 열 수 없습니다.')
+    }
+  }
+
+  const handleOpenPrivacy = async () => {
+    const privacyUrl = 'https://jyy4014.github.io/JapaneseStoryAppExpo/privacy' // TODO: 실제 개인정보처리방침 페이지 URL로 변경
+    try {
+      const supported = await Linking.canOpenURL(privacyUrl)
+      if (supported) {
+        await Linking.openURL(privacyUrl)
+      } else {
+        Alert.alert('안내', '개인정보 처리 방침 페이지를 열 수 없습니다.')
+      }
+    } catch (error) {
+      console.error('Error opening privacy:', error)
+      Alert.alert('오류', '개인정보 처리 방침 페이지를 열 수 없습니다.')
+    }
+  }
+
+  // 앱 버전 가져오기
+  const appVersion = Constants.expoConfig?.version || '1.0.0'
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
