@@ -39,7 +39,16 @@ jobs:
           EXPO_BASE_URL: /JapaneseStoryAppExpo/
       
       - name: Copy index.html to 404.html for SPA routing
-        run: cp ./dist/index.html ./dist/404.html
+        run: |
+          cp ./dist/index.html ./dist/404.html
+          echo "✅ 404.html created for SPA routing"
+          # 404.html이 올바르게 생성되었는지 확인
+          if [ -f ./dist/404.html ]; then
+            echo "✅ 404.html exists"
+          else
+            echo "❌ 404.html not found!"
+            exit 1
+          fi
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
