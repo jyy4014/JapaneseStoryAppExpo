@@ -105,8 +105,9 @@ export class ApiClient {
       }
     }
 
-    // 요청 시작 로그
-    console.log(`[ApiClient:${requestId}] Request started${retryCount > 0 ? ` (retry ${retryCount})` : ''}`, {
+    // 요청 시작 로그 (개발 환경에서만)
+    if (__DEV__) {
+      console.log(`[ApiClient:${requestId}] Request started${retryCount > 0 ? ` (retry ${retryCount})` : ''}`, {
       method,
       path,
       url: url.toString(),
@@ -124,26 +125,30 @@ export class ApiClient {
       const response = await fetch(url.toString(), fetchOptions)
       const duration = Date.now() - startTime
 
-      // 응답 로그
-      console.log(`[ApiClient:${requestId}] Response received`, {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url,
-        duration: `${duration}ms`,
-        retryCount,
-        headers: Object.fromEntries(response.headers.entries()),
-      })
+      // 응답 로그 (개발 환경에서만)
+      if (__DEV__) {
+        console.log(`[ApiClient:${requestId}] Response received`, {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          duration: `${duration}ms`,
+          retryCount,
+          headers: Object.fromEntries(response.headers.entries()),
+        })
+      }
 
       const payload = await parseBody(response)
 
       if (!response.ok) {
-        console.error(`[ApiClient:${requestId}] Request failed`, {
+        if (__DEV__) {
+          console.error(`[ApiClient:${requestId}] Request failed`, {
           status: response.status,
           statusText: response.statusText,
           payload,
-          url: response.url,
-          retryCount,
-        })
+            url: response.url,
+            retryCount,
+          })
+        }
 
         const error: ApiError = {
           message: payload?.message || 'Request failed',
@@ -153,19 +158,22 @@ export class ApiClient {
         return { data: null as T | null, error }
       }
 
-      console.log(`[ApiClient:${requestId}] Request succeeded`, {
-        status: response.status,
-        hasData: !!payload,
-        duration: `${duration}ms`,
-        retryCount,
-      })
+        if (__DEV__) {
+          console.log(`[ApiClient:${requestId}] Request succeeded`, {
+            status: response.status,
+            hasData: !!payload,
+            duration: `${duration}ms`,
+            retryCount,
+          })
+        }
 
       return { data: payload as T, error: null }
     } catch (error) {
       const duration = Date.now() - startTime
 
-      // 네트워크 에러 상세 로그
-      console.error(`[ApiClient:${requestId}] Network error`, {
+      // 네트워크 에러 상세 로그 (개발 환경에서만)
+      if (__DEV__) {
+        console.error(`[ApiClient:${requestId}] Network error`, {
         error: error instanceof Error ? {
           name: error.name,
           message: error.message,
@@ -175,13 +183,16 @@ export class ApiClient {
         method,
         duration: `${duration}ms`,
         retryCount,
-        errorType: error instanceof TypeError ? 'TypeError (CORS/Network)' : 
-                  error instanceof Error ? error.constructor.name : 'Unknown',
-      })
+          errorType: error instanceof TypeError ? 'TypeError (CORS/Network)' : 
+                    error instanceof Error ? error.constructor.name : 'Unknown',
+        })
+      }
 
       // 재시도 로직: 네트워크 에러이고 재시도 횟수가 남아있으면 재시도
       if (retryCount < maxRetries && error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.log(`[ApiClient:${requestId}] Retrying request after ${retryDelay}ms...`)
+        if (__DEV__) {
+          console.log(`[ApiClient:${requestId}] Retrying request after ${retryDelay}ms...`)
+        }
         await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)))
         return this.request<T>(path, options, retryCount + 1)
       }

@@ -15,6 +15,8 @@ import { lavenderPalette, spacing, typography } from '../../constants/theme'
 import { AudioPlayer } from '../../components/player/AudioPlayer'
 import { EpisodeService } from '../../services/episodeService'
 import { usePlayerStore } from '../../stores/playerStore'
+import { useAuthStore } from '../../stores/authStore'
+import { debugAuthConfig } from '../../config/debug'
 import { WordBottomSheet } from '../../components/words/WordBottomSheet'
 import { parseScript, renderParsedScript } from '../../utils/parseScript'
 import type { Episode, Sentence } from '../../types/dto/episode'
@@ -24,6 +26,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 export default function StoryPlayerScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>()
   const router = useRouter()
+  const { user } = useAuthStore()
   
   const [episode, setEpisode] = useState<Episode | null>(null)
   const [loading, setLoading] = useState(true)
@@ -264,9 +267,17 @@ export default function StoryPlayerScreen() {
           setSelectedWordId(null)
         }}
         onSave={async (wordId) => {
-          // TODO: userId 가져오기 (authStore에서)
-          const userId = 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' // 테스트용 (나중에 authStore.user.id로 교체)
-          console.log('Saving word:', wordId, 'for user:', userId)
+          // authStore에서 userId 가져오기
+          const userId = user?.id || (debugAuthConfig.useMockAuth ? debugAuthConfig.mockUser.id : null)
+          if (!userId) {
+            if (__DEV__) {
+              console.error('[Player] Cannot save word: user not found')
+            }
+            return
+          }
+          if (__DEV__) {
+            console.log('Saving word:', wordId, 'for user:', userId)
+          }
           
           const response = await fetch(
             `https://yzcscpcrakpdfsvluyej.supabase.co/functions/v1/api/words/${encodeURIComponent(wordId)}/save`,

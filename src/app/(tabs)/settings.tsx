@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router'
 import Constants from 'expo-constants'
 import { lavenderPalette, spacing, typography } from '../../constants/theme'
 import { useAuthStore } from '../../stores/authStore'
+import { debugAuthConfig } from '../../config/debug'
 
 interface UserPreferences {
   userId: string
@@ -57,7 +58,7 @@ export default function SettingsScreen() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const checkScaleAnim = useRef(new Animated.Value(0)).current
   const checkOpacityAnim = useRef(new Animated.Value(0)).current
-  const userId = user?.id || 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' // 테스트용
+  const userId = user?.id || (debugAuthConfig.useMockAuth ? debugAuthConfig.mockUser.id : null)
 
   // 설정 및 프로필 로드
   useEffect(() => {
@@ -83,7 +84,9 @@ export default function SettingsScreen() {
       const data = await res.json()
       setPreferences(data.preferences)
     } catch (error) {
-      console.error('Failed to load settings:', error)
+      if (__DEV__) {
+        console.error('Failed to load settings:', error)
+      }
       // 기본값 설정
       setPreferences({
         userId,
@@ -113,7 +116,9 @@ export default function SettingsScreen() {
       const data = await res.json()
       setProfile(data.profile)
     } catch (error) {
-      console.error('Failed to load profile:', error)
+      if (__DEV__) {
+        console.error('Failed to load profile:', error)
+      }
       // 기본값 설정
       setProfile({
         id: userId,
@@ -180,7 +185,9 @@ export default function SettingsScreen() {
         }, 1000)
       })
     } catch (error) {
-      console.error('Failed to update profile:', error)
+      if (__DEV__) {
+        console.error('Failed to update profile:', error)
+      }
       Alert.alert('오류', '프로필을 업데이트하지 못했습니다.')
       setSaving(false)
     }
@@ -238,7 +245,9 @@ export default function SettingsScreen() {
         }, 1000)
       })
     } catch (error) {
-      console.error('Failed to update settings:', error)
+      if (__DEV__) {
+        console.error('Failed to update settings:', error)
+      }
       Alert.alert('오류', '설정을 업데이트하지 못했습니다.')
       setSaving(false)
     }
@@ -254,7 +263,9 @@ export default function SettingsScreen() {
           // TODO: supabase.auth.signOut() 호출
           setUser(null)
           // TODO: 로그인 페이지로 이동
-          console.log('Logged out')
+          if (__DEV__) {
+            console.log('Logged out')
+          }
         },
       },
     ])
@@ -270,7 +281,9 @@ export default function SettingsScreen() {
         Alert.alert('안내', '약관 페이지를 열 수 없습니다.')
       }
     } catch (error) {
-      console.error('Error opening terms:', error)
+      if (__DEV__) {
+        console.error('Error opening terms:', error)
+      }
       Alert.alert('오류', '약관 페이지를 열 수 없습니다.')
     }
   }
@@ -285,7 +298,9 @@ export default function SettingsScreen() {
         Alert.alert('안내', '개인정보 처리 방침 페이지를 열 수 없습니다.')
       }
     } catch (error) {
-      console.error('Error opening privacy:', error)
+      if (__DEV__) {
+        console.error('Error opening privacy:', error)
+      }
       Alert.alert('오류', '개인정보 처리 방침 페이지를 열 수 없습니다.')
     }
   }

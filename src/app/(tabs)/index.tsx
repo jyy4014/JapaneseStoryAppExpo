@@ -21,9 +21,9 @@ export default function HomeScreen() {
   const [streakLoading, setStreakLoading] = useState(false)
 
   useEffect(() => {
-    // 배포 환경에서도 테스트를 위해 실제 DB 사용자 ID 사용
-    if (!user) {
-      setUser({ id: 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' })
+    // 개발 환경에서만 모크 사용자 사용
+    if (!user && debugAuthConfig.useMockAuth) {
+      setUser({ id: debugAuthConfig.mockUser.id })
     }
   }, [user, setUser])
 
@@ -45,15 +45,21 @@ export default function HomeScreen() {
   const loadProfile = async () => {
     if (!user?.id) return
 
-    console.log('[HomeScreen] Loading profile for user:', user.id)
+    if (__DEV__) {
+      console.log('[HomeScreen] Loading profile for user:', user.id)
+    }
     try {
       const { data, error } = await UserService.getProfile(user.id)
       if (error) {
-        console.error('[HomeScreen] Failed to load profile:', error)
+        if (__DEV__) {
+          console.error('[HomeScreen] Failed to load profile:', error)
+        }
         return
       }
       if (data) {
-        console.log('[HomeScreen] Profile loaded:', { currentStreak: data.currentStreak, lastCompletedDate: data.lastCompletedDate })
+        if (__DEV__) {
+          console.log('[HomeScreen] Profile loaded:', { currentStreak: data.currentStreak, lastCompletedDate: data.lastCompletedDate })
+        }
         setUser({
           ...user,
           currentStreak: data.currentStreak,
@@ -61,27 +67,37 @@ export default function HomeScreen() {
         })
       }
     } catch (error) {
-      console.error('[HomeScreen] Failed to load profile:', error)
+      if (__DEV__) {
+        console.error('[HomeScreen] Failed to load profile:', error)
+      }
     }
   }
 
   const updateStreakProgress = async () => {
     if (!user?.id || streakLoading) return
 
-    console.log('[HomeScreen] Updating streak progress for user:', user.id)
+    if (__DEV__) {
+      console.log('[HomeScreen] Updating streak progress for user:', user.id)
+    }
     setStreakLoading(true)
     try {
       const { data, error } = await UserService.updateDailyGoalProgress(user.id)
       if (error) {
-        console.error('[HomeScreen] Failed to update streak:', error)
+        if (__DEV__) {
+          console.error('[HomeScreen] Failed to update streak:', error)
+        }
         return
       }
       if (data) {
-        console.log('[HomeScreen] Streak updated:', { currentStreak: data.currentStreak, lastCompletedDate: data.lastCompletedDate })
+        if (__DEV__) {
+          console.log('[HomeScreen] Streak updated:', { currentStreak: data.currentStreak, lastCompletedDate: data.lastCompletedDate })
+        }
         updateStreak(data.currentStreak, data.lastCompletedDate)
       }
     } catch (error) {
-      console.error('[HomeScreen] Failed to update streak:', error)
+      if (__DEV__) {
+        console.error('[HomeScreen] Failed to update streak:', error)
+      }
     } finally {
       setStreakLoading(false)
     }

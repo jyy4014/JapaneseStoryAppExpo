@@ -37,12 +37,10 @@ export default function WordbookScreen() {
   const [loadingReview, setLoadingReview] = useState(false)
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
-  // 사용자 초기화 - 실제 DB 사용자 ID 사용
+  // 개발 환경에서만 모크 사용자 사용
   useEffect(() => {
-    if (!user) {
-      // 실제 DB의 사용자 ID 사용 (테스트용)
-      // TODO: 실제 로그인 시스템 구현 시 제거
-      setUser({ id: 'e5d4b7b3-de14-4b9a-b6c8-03dfe90fba97' })
+    if (!user && debugAuthConfig.useMockAuth) {
+      setUser({ id: debugAuthConfig.mockUser.id })
     }
   }, [user, setUser])
 
@@ -131,7 +129,9 @@ export default function WordbookScreen() {
       )
       if (!statsRes.ok) {
         const errorText = await statsRes.text()
-        console.error('통계 조회 실패:', statsRes.status, errorText)
+        if (__DEV__) {
+          console.error('통계 조회 실패:', statsRes.status, errorText)
+        }
         // 통계 조회 실패 시 단어 목록 개수로 대체
         const masteredCount = wordsList.filter((w: any) => (w.level || 0) >= 4).length
         const totalCorrect = wordsList.reduce((sum: number, w: any) => sum + (w.correctCount || 0), 0)
@@ -142,7 +142,9 @@ export default function WordbookScreen() {
         })
       } else {
         const statsData = await statsRes.json()
-        console.log('통계 데이터:', statsData)
+        if (__DEV__) {
+          console.log('통계 데이터:', statsData)
+        }
         setStats({
           totalWords: statsData.totalWords ?? wordsList.length,
           masteredWords: statsData.masteredWords ?? 0,
@@ -150,7 +152,9 @@ export default function WordbookScreen() {
         })
       }
     } catch (err) {
-      console.error('Failed to load wordbook data:', err)
+      if (__DEV__) {
+        console.error('Failed to load wordbook data:', err)
+      }
       setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다.')
     } finally {
       setLoading(false)
@@ -184,21 +188,27 @@ export default function WordbookScreen() {
 
       if (words.length === 0) {
         // 복습할 단어가 없음
-        console.log('복습할 단어가 없습니다')
+        if (__DEV__) {
+          console.log('복습할 단어가 없습니다')
+        }
         return
       }
 
       setReviewWords(words)
       setReviewVisible(true)
     } catch (error) {
-      console.error('Failed to load review words:', error)
+      if (__DEV__) {
+        console.error('Failed to load review words:', error)
+      }
     } finally {
       setLoadingReview(false)
     }
   }
 
   const handleReviewComplete = (results: { correct: number; wrong: number }) => {
-    console.log('Review completed:', results)
+    if (__DEV__) {
+      console.log('Review completed:', results)
+    }
     // 복습 완료 후 데이터 새로고침
     if (user?.id) {
       loadWordbookData()
